@@ -38,7 +38,8 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
 .nav-links .mobile-divider{display:none}
 .nav-right{display:flex;align-items:center;gap:14px}
 .user-email{cursor:pointer;text-decoration:none;color:inherit;font-size:13px;color:var(--ink-3);font-family:var(--ff-mono)}
-.user-email:hover,.user-pill:hover{text-decoration:underline}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;font-family:var(--ff-display);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0;transition:opacity .15s}
+.nav-avatar:hover{opacity:.85}
 .signout-btn{font-size:13px;color:var(--ink-3);background:none;border:1px solid var(--border-2);border-radius:8px;padding:6px 14px;cursor:pointer;transition:all .15s;font-family:var(--ff-body)}
 .signout-btn:hover{color:var(--ink);border-color:var(--ink-3)}
 .hamburger{display:none;background:none;border:1.5px solid var(--border-2);border-radius:8px;padding:6px 11px;cursor:pointer;color:var(--ink-2);font-family:var(--ff-mono);font-size:14px;line-height:1;align-items:center;gap:5px;transition:all .15s}
@@ -97,7 +98,6 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
   nav{padding:0 16px}
   .hamburger{display:flex}
   .user-email{cursor:pointer;text-decoration:none;color:inherit;display:none}
-  .user-email:hover,.user-pill:hover{text-decoration:underline}
 .signout-btn{display:none}
   .nav-links{display:none;position:absolute;top:64px;left:-16px;right:-16px;background:var(--surface);border-bottom:1.5px solid var(--border-2);flex-direction:column;padding:8px 20px 14px;gap:0;z-index:99}
   .nav-links.open{display:flex}
@@ -298,8 +298,11 @@ sb.auth.getSession().then(function(res){
   currentUser=session.user;
   sessionToken=session.access_token;
   document.getElementById('user-email').textContent=currentUser.email;
-  sb.from('profiles').select('plan').eq('user_id',currentUser.id).single().then(function(pr){
+  sb.from('profiles').select('plan,first_name').eq('user_id',currentUser.id).single().then(function(pr){
     var plan=(pr.data&&pr.data.plan)||'free';
+    var fn=pr.data&&pr.data.first_name?pr.data.first_name:'';
+    if(fn){var ae=document.getElementById('user-email');if(ae)ae.textContent=fn;}
+    var av=document.getElementById('nav-avatar');if(av)av.textContent=fn?fn[0].toUpperCase():'?';
     if(plan!=='pro'&&plan!=='earned')addNavLocks();
   }).catch(function(){addNavLocks();});
   input.focus();

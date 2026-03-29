@@ -54,7 +54,8 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
 .nav-links .mobile-divider{display:none}
 .nav-right{display:flex;align-items:center;gap:12px}
 .user-pill{font-size:12px;color:var(--ink-3);font-family:var(--ff-mono);background:var(--bg-2);padding:5px 10px;border-radius:20px}
-.user-pill:hover{text-decoration:underline}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;font-family:var(--ff-display);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0;transition:opacity .15s}
+.nav-avatar:hover{opacity:.85}
 .signout-btn{font-size:13px;color:var(--ink-3);background:none;border:1px solid var(--border-2);border-radius:8px;padding:6px 14px;cursor:pointer;transition:all .15s;font-family:var(--ff-body)}
 .signout-btn:hover{color:var(--ink);border-color:var(--ink-3)}
 .hamburger{display:none;background:none;border:1.5px solid var(--border-2);border-radius:8px;padding:6px 11px;cursor:pointer;color:var(--ink-2);font-family:var(--ff-mono);font-size:14px;line-height:1;align-items:center;gap:5px;transition:all .15s}
@@ -120,7 +121,6 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
   nav{padding:0 16px}
   .hamburger{display:flex}
   .user-pill{display:none}
-  .user-pill:hover{text-decoration:underline}
 .signout-btn{display:none}
   .nav-links{display:none;position:absolute;top:64px;left:-16px;right:-16px;background:var(--surface);border-bottom:1.5px solid var(--border-2);flex-direction:column;padding:8px 20px 14px;gap:0;z-index:99}
   .nav-links.open{display:flex}
@@ -256,7 +256,7 @@ function toggleNav(){document.getElementById('nav-links').classList.toggle('open
 document.addEventListener('click',function(e){var dd=document.getElementById('nav-dropdown');if(dd&&!dd.contains(e.target))dd.classList.remove('open');});
 function addNavLocks(){var lockSvg='<svg class="nav-lock" viewBox="0 0 10 12"><rect x="1.5" y="5" width="7" height="6" rx="1.2" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M3 5V3.5a2 2 0 014 0V5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg>';document.querySelectorAll('.nav-dropdown-menu a').forEach(function(a){if(a.href.match(/vault|claim-builder|state-benefits|nexus-letter|appeal-assistant|tdiu-smc|cp-prep|rating-analyzer|statement-gen/)&&!a.querySelector('.nav-lock')){a.innerHTML=lockSvg+a.textContent;}});}
 function handleSignout(){Object.keys(localStorage).filter(function(k){return k.startsWith('ur_');}).forEach(function(k){localStorage.removeItem(k);});sb.auth.signOut().then(function(){window.location.href='login.html';});}
-function updateNavAuth(loggedIn){var ai=document.getElementById("nav-auth-items");var gi=document.getElementById("nav-guest-items");var ue=document.getElementById("user-email");var ld=document.getElementById("nav-login-desktop");var sd=document.getElementById("nav-signup-desktop");var so=document.getElementById("nav-signout-desktop");if(loggedIn){if(ai)ai.style.display="";if(gi)gi.style.display="none";if(ld)ld.style.display="none";if(sd)sd.style.display="none";if(so)so.style.display="";}else{if(ai)ai.style.display="none";if(gi)gi.style.display="";if(ue)ue.style.display="none";if(ld)ld.style.display="";if(sd)sd.style.display="";if(so)so.style.display="none";}}
+function updateNavAuth(loggedIn){var ai=document.getElementById("nav-auth-items");var gi=document.getElementById("nav-guest-items");var ue=document.getElementById("user-email");var ld=document.getElementById("nav-login-desktop");var sd=document.getElementById("nav-signup-desktop");var so=document.getElementById("nav-signout-desktop");if(loggedIn){if(ai)ai.style.display="";if(gi)gi.style.display="none";if(ld)ld.style.display="none";if(sd)sd.style.display="none";if(so)so.style.display='';var av2=document.getElementById('nav-avatar');if(av2)av2.style.display='';}else{if(ai)ai.style.display="none";if(gi)gi.style.display="";if(ue)ue.style.display="none";if(ld)ld.style.display="";if(sd)sd.style.display="";if(so)so.style.display="none";}}
 
 var CONDITION_QUESTIONS={
   'mental':[
@@ -455,8 +455,11 @@ function renderConditions(conditions){
   sessionToken=session.access_token;
   document.getElementById('user-email').textContent=currentUser.email;
   updateNavAuth(true);
-  sb.from('profiles').select('plan').eq('user_id',currentUser.id).single().then(function(pr){
+  sb.from('profiles').select('plan,first_name').eq('user_id',currentUser.id).single().then(function(pr){
     var plan=(pr.data&&pr.data.plan)||'free';
+    var fn=pr.data&&pr.data.first_name?pr.data.first_name:'';
+    if(fn){var ae=document.getElementById('user-email');if(ae)ae.textContent=fn;}
+    var av=document.getElementById('nav-avatar');if(av)av.textContent=fn?fn[0].toUpperCase():'?';
     if(plan!=='pro'&&plan!=='earned'){document.body.classList.add('paywalled');addNavLocks();document.getElementById('paywall-cta').href='upgrade.html';document.getElementById('paywall-cta').textContent='Unlock EARNED \u2014 $39/mo';document.getElementById('paywall-alt').innerHTML='Already EARNED? <a href="login.html">Log in</a>';}
   }).catch(function(){document.body.classList.add('paywalled');addNavLocks();});
   sb.from('conditions').select('name,rating,decision').eq('user_id',currentUser.id).then(function(qr){

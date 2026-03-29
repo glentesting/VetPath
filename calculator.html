@@ -49,7 +49,8 @@
   .nav-links .mobile-tools-header{display:none}
   .nav-right{display:flex;align-items:center;gap:12px}
   .user-pill{font-size:12px;color:var(--ink-3);font-family:var(--ff-mono);background:var(--bg-2);padding:5px 10px;border-radius:20px}
-  .user-pill:hover{text-decoration:underline}
+  .nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;font-family:var(--ff-display);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0;transition:opacity .15s}
+.nav-avatar:hover{opacity:.85}
 .signout-btn{font-size:13px;color:var(--ink-3);background:none;border:1px solid var(--border-2);border-radius:8px;padding:6px 14px;cursor:pointer;transition:all .15s}
   .signout-btn:hover{color:var(--ink);border-color:var(--ink-3)}
   .hamburger{display:none;background:none;border:1.5px solid var(--border-2);border-radius:8px;padding:6px 11px;cursor:pointer;color:var(--ink-2);font-family:var(--ff-mono);font-size:14px;line-height:1;align-items:center;gap:5px;transition:all .15s}
@@ -162,7 +163,6 @@
     .layout{grid-template-columns:1fr}
     nav{padding:0 16px}
     .user-pill{display:none}
-    .user-pill:hover{text-decoration:underline}
 .signout-btn{display:none}
     .hamburger{display:flex}
     .nav-links{display:none;position:absolute;top:64px;left:-16px;right:-16px;background:var(--surface);border-bottom:1.5px solid var(--border-2);flex-direction:column;padding:8px 20px 14px;gap:0;z-index:99}
@@ -235,7 +235,8 @@
       </div>
     </div>
     <div class="nav-right">
-      <a href="profile.html" class="user-pill" id="user-email"></a>
+      <a href="profile.html" class="nav-avatar" id="nav-avatar">?</a>
+      <a href="profile.html" class="user-pill" id="user-email" style="text-decoration:none;color:inherit"></a>
       <a href="login.html" id="nav-login-desktop" style="display:none;font-size:13px;color:var(--ink-3)">Log in</a>
       <a href="signup.html" id="nav-signup-desktop" style="display:none;font-size:13px;color:#fff;background:var(--green);padding:7px 16px;border-radius:8px;font-weight:500;white-space:nowrap">Sign up</a>
       <button class="signout-btn" id="nav-signout-desktop" onclick="handleSignout()">Sign out</button>
@@ -387,8 +388,11 @@ async function init() {
       document.getElementById("user-email").textContent = currentUser.email;
       updateNavAuth(true);
       document.getElementById('import-bar').style.display='block';
-      sb.from('profiles').select('plan').eq('user_id',currentUser.id).single().then(function(pr){
+      sb.from('profiles').select('plan,first_name').eq('user_id',currentUser.id).single().then(function(pr){
         var plan=(pr.data&&pr.data.plan)||'free';
+    var fn=pr.data&&pr.data.first_name?pr.data.first_name:'';
+    if(fn){var ae=document.getElementById('user-email');if(ae)ae.textContent=fn;}
+    var av=document.getElementById('nav-avatar');if(av)av.textContent=fn?fn[0].toUpperCase():'?';
         if(plan!=='pro'&&plan!=='earned')addNavLocks();
       }).catch(function(){addNavLocks();});
       loadConditions().then(function() {
