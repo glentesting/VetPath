@@ -1,12 +1,20 @@
 // ADMIN ENDPOINT — manually delete a user from auth.users by email
 // Use this when account deletion failed and user is stuck with "already registered"
 //
-// Call from browser console or curl:
-// POST /api/admin-delete-user
-// Body: { "email": "user@example.com", "adminSecret": "your-secret" }
+// NOT the same as api/delete-account.js:
+//   - delete-account.js = user-facing, deletes OWN account via JWT auth
+//   - admin-delete-user.js = admin-only, deletes ANY user by email via shared secret
+// Both use adminClient.auth.admin.deleteUser() with the service role key.
 //
-// Set ADMIN_SECRET in Vercel env vars to protect this endpoint.
-// After use, consider removing this file or rotating the secret.
+// Environment variables required:
+//   SUPABASE_SERVICE_ROLE_KEY — Supabase dashboard > Settings > API > service_role key
+//   ADMIN_SECRET — any random string you set in Vercel env vars to protect this endpoint
+//
+// Usage (browser console or curl):
+//   POST https://underratedvets.com/api/admin-delete-user
+//   Body: { "email": "stuck-user@example.com", "adminSecret": "your-secret-here" }
+//
+// After use, consider rotating ADMIN_SECRET in Vercel env vars.
 
 import { createClient } from '@supabase/supabase-js';
 
