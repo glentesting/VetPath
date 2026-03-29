@@ -624,7 +624,7 @@ function init() {
       document.getElementById('user-email').textContent = currentUser.email;
       sb.from('profiles').select('plan').eq('user_id',currentUser.id).single().then(function(pr){
         var plan=(pr.data&&pr.data.plan)||'free';
-        if(plan!=='pro')addNavLocks();
+        if(plan!=='pro'&&plan!=='earned')addNavLocks();
       }).catch(function(){addNavLocks();});
       loadConditions();
     } else {

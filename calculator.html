@@ -387,7 +387,7 @@ async function init() {
       document.getElementById('import-bar').style.display='block';
       sb.from('profiles').select('plan').eq('user_id',currentUser.id).single().then(function(pr){
         var plan=(pr.data&&pr.data.plan)||'free';
-        if(plan!=='pro')addNavLocks();
+        if(plan!=='pro'&&plan!=='earned')addNavLocks();
       }).catch(function(){addNavLocks();});
       loadConditions().then(function() {
         if (conditions.length === 0) addCondition();

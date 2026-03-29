@@ -125,9 +125,8 @@ async function handleSignup(){
   setLoading(false);
   if(error){
     if(error.message&&error.message.toLowerCase().includes('already registered')){
-      showError('This email is already registered. <a href="login.html" style="color:var(--green);font-weight:500">Log in here</a> or <a href="login.html" style="color:var(--green);font-weight:500">reset your password</a> if you forgot it.');
-      errorBox.innerHTML=errorBox.textContent;
-      errorBox.innerHTML='This email is already registered. <a href="login.html" style="color:var(--green);font-weight:500">Log in here</a> or <a href="login.html#reset" style="color:var(--green);font-weight:500">reset your password</a>.';
+      errorBox.style.display='block';
+      errorBox.innerHTML='This email is already registered. <a href="login.html" style="color:var(--green);font-weight:500">Log in here</a> or <a href="login.html" style="color:var(--green);font-weight:500">reset your password</a>.';
     }else{
       showError(error.message||'Sign up failed. Please try again.');
     }

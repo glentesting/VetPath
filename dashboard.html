@@ -312,7 +312,7 @@ sb.auth.getSession().then(function(res){
   // Check plan — show upgrade banner and lock icons for free users
   sb.from('profiles').select('plan').eq('user_id',session.user.id).single().then(function(pr){
     var plan=(pr.data&&pr.data.plan)||'free';
-    if(plan!=='pro'){document.getElementById('upgrade-banner').style.display='flex';addNavLocks();}
+    if(plan!=='pro'&&plan!=='earned'){document.getElementById('upgrade-banner').style.display='flex';addNavLocks();}
   }).catch(function(){document.getElementById('upgrade-banner').style.display='flex';addNavLocks();});
 
   // Load conditions
