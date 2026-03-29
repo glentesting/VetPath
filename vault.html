@@ -315,6 +315,7 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
       <button class="reupload-link" onclick="showUpload()">+ Upload new PDF</button>
     </div>
     <div class="stat-row" id="stat-row"></div>
+    <div id="doc-insights"></div>
     <div class="layout">
       <div>
         <div class="card">
@@ -533,10 +534,13 @@ function handleFile(file){
     })
     .then(function(extracted){
       if(!extracted.success||!extracted.conditions||!extracted.conditions.length)throw new Error('No conditions found. Make sure this is a VA rating decision letter.');
-      // Store the official combined rating from the PDF
-      if(extracted.combined_rating!=null){
-        localStorage.setItem('ur_combined_rating_'+currentUser.id, extracted.combined_rating);
-      }
+      // Store rich extraction data
+      if(extracted.combined_rating!=null)localStorage.setItem('ur_combined_rating_'+currentUser.id,extracted.combined_rating);
+      if(extracted.summary)localStorage.setItem('ur_doc_summary_'+currentUser.id,extracted.summary);
+      if(extracted.document_type)localStorage.setItem('ur_doc_type_'+currentUser.id,extracted.document_type);
+      if(extracted.monthly_payment)localStorage.setItem('ur_monthly_pay_'+currentUser.id,extracted.monthly_payment);
+      if(extracted.favorable_findings&&extracted.favorable_findings.length)localStorage.setItem('ur_favorable_'+currentUser.id,JSON.stringify(extracted.favorable_findings));
+      if(extracted.denial_reasons&&extracted.denial_reasons.length)localStorage.setItem('ur_denials_'+currentUser.id,JSON.stringify(extracted.denial_reasons));
       setStep('step-extract','done');setStep('step-save','active');
       // Fetch existing IDs first, insert new rows, then delete old — so a failed insert doesn't wipe data
       return sb.from('conditions').select('id').eq('user_id',currentUser.id).then(function(existRes){
@@ -580,7 +584,26 @@ function renderDashboard(data){
     var officialStored=localStorage.getItem('ur_combined_rating_'+currentUser.id);
     var displayRating=officialStored!=null?parseInt(officialStored):official;
     var ratingSubText=officialStored!=null?'As stated in your VA rating decision':'Exact '+exact.toFixed(1)+'% \u2192 rounded to '+official+'%';
-    document.getElementById('stat-row').innerHTML='<div class="stat-card green-tint"><div class="stat-label">Combined VA rating</div><div class="stat-number green">'+displayRating+'%</div><div class="stat-sub">'+ratingSubText+'</div></div><div class="stat-card"><div class="stat-label">Service connected</div><div class="stat-number">'+dc+'</div><div class="stat-sub">of '+data.length+' total conditions</div></div><div class="stat-card green-tint"><div class="stat-label">Monthly comp (est.)</div><div class="stat-number green">$'+(COMP[displayRating]||0).toLocaleString('en-US',{minimumFractionDigits:0})+'</div><div class="stat-sub">Veteran alone, no dependents</div></div>';
+    var monthlyPay=localStorage.getItem('ur_monthly_pay_'+currentUser.id);
+    var compDisplay=monthlyPay?'$'+parseFloat(monthlyPay).toLocaleString('en-US',{minimumFractionDigits:0}):'$'+(COMP[displayRating]||0).toLocaleString('en-US',{minimumFractionDigits:0});
+    var compSub=monthlyPay?'From your rating decision':'Veteran alone, no dependents';
+    document.getElementById('stat-row').innerHTML='<div class="stat-card green-tint"><div class="stat-label">Combined VA rating</div><div class="stat-number green">'+displayRating+'%</div><div class="stat-sub">'+ratingSubText+'</div></div><div class="stat-card"><div class="stat-label">Service connected</div><div class="stat-number">'+dc+'</div><div class="stat-sub">of '+data.length+' total conditions</div></div><div class="stat-card green-tint"><div class="stat-label">Monthly compensation</div><div class="stat-number green">'+compDisplay+'</div><div class="stat-sub">'+compSub+'</div></div>';
+    // Show document summary and insights if available
+    var docSummary=localStorage.getItem('ur_doc_summary_'+currentUser.id);
+    var docType=localStorage.getItem('ur_doc_type_'+currentUser.id);
+    var favorable=localStorage.getItem('ur_favorable_'+currentUser.id);
+    var denials=localStorage.getItem('ur_denials_'+currentUser.id);
+    var insightsHtml='';
+    if(docSummary||docType){
+      insightsHtml+='<div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:12px;padding:16px 18px;margin-bottom:14px">';
+      if(docType)insightsHtml+='<div style="font-family:var(--ff-mono);font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">'+escH(docType)+'</div>';
+      if(docSummary)insightsHtml+='<div style="font-size:14px;color:var(--ink-2);line-height:1.6">'+escH(docSummary)+'</div>';
+      insightsHtml+='</div>';
+    }
+    if(favorable){try{var fav=JSON.parse(favorable);if(fav.length){insightsHtml+='<div style="background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:12px 14px;margin-bottom:10px"><div style="font-family:var(--ff-mono);font-size:10px;color:var(--green);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Favorable findings</div>';fav.forEach(function(f){insightsHtml+='<div style="font-size:13px;color:var(--ink-2);line-height:1.5;padding:2px 0">\u2714 '+escH(f)+'</div>';});insightsHtml+='</div>';}}catch(e){}}
+    if(denials){try{var den2=JSON.parse(denials);if(den2.length){insightsHtml+='<div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:10px;padding:12px 14px;margin-bottom:10px"><div style="font-family:var(--ff-mono);font-size:10px;color:var(--amber);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Denial reasons</div>';den2.forEach(function(d){insightsHtml+='<div style="font-size:13px;color:var(--ink-2);line-height:1.5;padding:2px 0">\u26A0 '+escH(d)+'</div>';});insightsHtml+='</div>';}}catch(e){}}
+    var insightsEl=document.getElementById('doc-insights');
+    if(insightsEl)insightsEl.innerHTML=insightsHtml;
     document.getElementById('cond-list').innerHTML=data.map(function(x){
       var ratingHtml;
       var cls=dpClass(x.decision);

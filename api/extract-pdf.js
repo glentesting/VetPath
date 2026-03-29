@@ -98,7 +98,7 @@ export default async function handler(req) {
     }
     const pdfBase64 = btoa(binary);
 
-    // Call Claude API
+    // Call Claude API with comprehensive VA document extraction prompt
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -107,8 +107,8 @@ export default async function handler(req) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-opus-4-6',
-        max_tokens: 2048,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 3000,
         messages: [
           {
             role: 'user',
@@ -119,36 +119,61 @@ export default async function handler(req) {
               },
               {
                 type: 'text',
-                text: `You are extracting VA disability claim data from this rating decision document.
+                text: `You are a VA benefits document expert. Extract every piece of useful claims information from this VA document, regardless of document type or format.
 
-Return ONLY a valid JSON object with no other text, no markdown, no explanation.
+The document may be any of the following: rating decision letter, award/notification letter, denial letter, supplemental claim decision, C&P examination report, combined rating letter, HLR or BVA decision, or any other VA correspondence.
 
-Format:
+EXTRACT ALL OF THE FOLLOWING that appear anywhere in the document:
+
+1. CONDITIONS — Every medical condition mentioned, including:
+   - Conditions that were SERVICE CONNECTED with a rating %
+   - Conditions that were DENIED service connection
+   - Conditions that were DEFERRED
+   - Conditions mentioned in C&P exams even without a rating
+   - Secondary conditions referenced
+   For each: name, diagnostic_code (if shown), rating percentage (or null), status, effective_date, and any relevant notes.
+
+2. COMBINED RATING — The veteran's overall combined rating % if mentioned anywhere
+
+3. EFFECTIVE DATES — Any effective dates for ratings or awards
+
+4. MONTHLY PAYMENT — Any dollar amounts listed as monthly compensation
+
+5. KEY DECISIONS — Any favorable findings, reasons for denial, appeal options mentioned
+
+6. DOCUMENT TYPE — What type of VA document this is
+
+Return ONLY valid JSON in this exact format — no markdown, no explanation:
 {
+  "document_type": "Rating Decision Letter",
   "combined_rating": 90,
+  "monthly_payment": 2044.89,
+  "effective_date": "2024-03-01",
   "conditions": [
     {
       "condition_name": "PTSD",
       "diagnostic_code": "9411",
       "rating": 70,
-      "decision": "service connected",
-      "effective_date": "2023-09-03"
+      "decision": "Service Connected",
+      "effective_date": "2023-09-03",
+      "notes": "any relevant notes"
     }
-  ]
+  ],
+  "favorable_findings": ["string array"],
+  "denial_reasons": ["string array"],
+  "appeal_options": ["string array"],
+  "summary": "2-3 sentence plain English summary of what this document means for the veteran"
 }
 
-Rules for combined_rating:
-- Extract the official combined disability rating percentage EXACTLY as stated in the document
-- Do NOT calculate or estimate it — use only what is printed
-- Use null if no combined rating is stated
-
-Rules for conditions:
-- Extract every condition listed — service connected, not service connected, and deferred
-- rating must be a number (integer) or null if no rating assigned
-- decision must be exactly: "service connected", "not service connected", or "deferred"
-- effective_date format: YYYY-MM-DD, or null if not found
+Rules:
+- decision must be exactly: "Service Connected", "Denied", "Deferred", or "Pending"
+- rating must be an integer or null if no rating assigned
+- effective_date format: YYYY-MM-DD or null
 - diagnostic_code is a string or null
-- Include ALL conditions, even denied ones`
+- Use null or empty array [] for fields not found
+- Do NOT guess or fabricate — only extract what is explicitly stated
+- Include ALL conditions even denied, deferred, or unrated ones
+- Look across ALL pages — conditions may be scattered throughout`
               }
             ]
           }
@@ -203,8 +228,22 @@ Rules for conditions:
     return new Response(JSON.stringify({
       success: true,
       user_id: user_id || null,
+      document_type: parsed.document_type || null,
       combined_rating: parsed.combined_rating || null,
-      conditions: parsed.conditions || [],
+      monthly_payment: parsed.monthly_payment || null,
+      effective_date: parsed.effective_date || null,
+      conditions: (parsed.conditions || []).map(c => ({
+        condition_name: c.condition_name || c.name || 'Unknown',
+        diagnostic_code: c.diagnostic_code || null,
+        rating: c.rating,
+        decision: c.decision || 'Pending',
+        effective_date: c.effective_date || null,
+        notes: c.notes || null
+      })),
+      favorable_findings: parsed.favorable_findings || [],
+      denial_reasons: parsed.denial_reasons || [],
+      appeal_options: parsed.appeal_options || [],
+      summary: parsed.summary || null,
       count: (parsed.conditions || []).length
     }), {
       status: 200,
