@@ -103,20 +103,27 @@ vpInput.addEventListener('input',function(){this.style.height='auto';this.style.
 // State
 var veraMessages=[];
 var veraSending=false;
-var veraIsPaid=false;
+// Plan check: null = unchecked, true = paid, false = free/anon
+var veraIsPaid=null;
 
-// Check plan for free message limit
-function veraCheckPlan(){
+// Lazy plan check — runs once on first send, caches result
+// Uses the page's sb variable (var sb is on window, const/let may not be)
+// Falls back to checking window.sb, then tries to find sb in global scope
+function veraGetSb(){return window.sb||null;}
+async function veraCheckPlan(){
+  if(veraIsPaid!==null)return veraIsPaid;
+  var client=veraGetSb();
+  if(!client){veraIsPaid=false;return false;}
   try{
-    if(window.sb&&window.currentUser){
-      window.sb.from('profiles').select('plan').eq('user_id',window.currentUser.id).single().then(function(r){
-        var plan=(r.data&&r.data.plan)||'free';
-        if(plan==='pro'||plan==='earned')veraIsPaid=true;
-      });
-    }
-  }catch(e){}
+    var sess=await client.auth.getSession();
+    var session=sess&&sess.data&&sess.data.session?sess.data.session:null;
+    if(!session){veraIsPaid=false;return false;}
+    var r=await client.from('profiles').select('plan').eq('user_id',session.user.id).single();
+    var plan=(r.data&&r.data.plan)||'free';
+    veraIsPaid=(plan==='pro'||plan==='earned');
+  }catch(e){veraIsPaid=false;}
+  return veraIsPaid;
 }
-setTimeout(veraCheckPlan,1500);
 
 window.openVera=function(){
   document.getElementById('vera-panel').classList.add('open');
@@ -162,17 +169,20 @@ window.veraSend=async function(){
   var text=input.value.trim();
   if(!text||veraSending)return;
 
-  // Free message limit (10 messages for non-paid users)
-  if(!veraIsPaid){
+  // Free message limit (3 messages for non-paid users)
+  // Flow: check plan (cached after first call) → if free, check counter → if over limit, block
+  var paid=await veraCheckPlan();
+  if(!paid){
     var count=parseInt(localStorage.getItem('vera_free_count')||'0');
-    if(count>=10){
+    if(count>=3){
+      // Limit reached — show user's message then the upgrade nudge
       input.value='';
       veraAddMsg('user',text);
       var container=document.getElementById('vp-messages');
       var typing=document.getElementById('vp-typing');
       var limitDiv=document.createElement('div');
       limitDiv.className='vp-msg assistant';
-      limitDiv.innerHTML='<div class="vp-msg-label">VERA</div><div class="vp-msg-bubble"><p>You\u2019ve used your 10 free questions. To keep getting answers \u2014 on your conditions, your rating, your next steps \u2014 unlock EARNED for $39/mo. No lawyers. No cuts. Just the intel you need.</p><a href="upgrade.html" style="display:inline-block;margin-top:10px;padding:10px 20px;background:#0E8A63;color:#fff;border-radius:10px;font-size:14px;font-weight:500;text-decoration:none;font-family:DM Sans,sans-serif">Unlock EARNED \u2192</a></div>';
+      limitDiv.innerHTML='<div class="vp-msg-label">VERA</div><div class="vp-msg-bubble"><p>You\u2019ve used your 3 free questions. To keep getting answers \u2014 on your conditions, your rating, your next steps \u2014 unlock EARNED for $39/mo. No lawyers. No cuts. Just the intel you need.</p><a href="upgrade.html" style="display:inline-block;margin-top:10px;padding:10px 20px;background:#0E8A63;color:#fff;border-radius:10px;font-size:14px;font-weight:500;text-decoration:none;font-family:DM Sans,sans-serif">Unlock EARNED \u2192</a></div>';
       container.insertBefore(limitDiv,typing);
       container.scrollTop=container.scrollHeight;
       input.disabled=true;
@@ -180,6 +190,7 @@ window.veraSend=async function(){
       document.getElementById('vp-send').disabled=true;
       return;
     }
+    // Increment BEFORE the API call so it can't be bypassed
     localStorage.setItem('vera_free_count',String(count+1));
   }
 
