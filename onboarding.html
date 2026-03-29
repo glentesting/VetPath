@@ -272,6 +272,9 @@ function setFile(file){
   if(!file.name.toLowerCase().endsWith('.pdf')){
     showUploadErr('Please upload a PDF file.');return;
   }
+  if(file.size>4*1024*1024){
+    showUploadErr('File too large (max 4MB). Try a smaller PDF or skip this step and upload from the Vault instead.');return;
+  }
   selectedFile=file;
   document.getElementById('upload-zone').classList.add('has-file');
   document.getElementById('upload-icon').textContent='✅';
@@ -310,10 +313,13 @@ async function handleUpload(){
     fill.style.width='60%';
     stat.textContent='Extracting conditions...';
     var pubUrl=SUPABASE_URL+'/storage/v1/object/public/rating-decisions/'+encodeURIComponent(fileName);
+    var token=(await sb.auth.getSession()).data.session.access_token;
     var res=await fetch('https://underratedvets.com/api/extract-pdf',{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({pdfUrl:pubUrl,userId:currentUser.id})
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      body:JSON.stringify({file_url:pubUrl,user_id:currentUser.id})
     });
+    if(!res.ok){var errData=await res.json().catch(function(){return{};});throw new Error(errData.error||'Extraction failed');}
     var data=await res.json();
     fill.style.width='100%';
     od.pdfUploaded=true;
@@ -330,7 +336,12 @@ async function handleUpload(){
     btn.disabled=false;
     btn.innerHTML='Upload &amp; analyze';
     prog.style.display='none';
-    showUploadErr('Upload failed \u2014 '+(err.message||'the file may be too large (max 10MB) or your connection dropped. Try again.'));
+    var msg=err.message||'';
+    if(msg.includes('Failed to fetch')||msg.includes('timed out')||msg.includes('NetworkError')){
+      showUploadErr('Upload timed out \u2014 your PDF may be too large for quick analysis. You can skip this step and upload from the Vault instead.');
+    }else{
+      showUploadErr('Upload failed \u2014 '+(msg||'please try again or skip this step.'));
+    }
   }
 }
 

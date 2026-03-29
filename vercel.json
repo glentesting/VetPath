@@ -1,4 +1,21 @@
 {
+  "functions": {
+    "api/extract-pdf.js": {
+      "maxDuration": 30
+    },
+    "api/analyze-gaps.js": {
+      "maxDuration": 30
+    },
+    "api/analyze-decision.js": {
+      "maxDuration": 30
+    },
+    "api/cp-prep.js": {
+      "maxDuration": 30
+    },
+    "api/generate-appeal.js": {
+      "maxDuration": 30
+    }
+  },
   "redirects": [
     {
       "source": "/(.*)",
