@@ -588,8 +588,10 @@ function renderSummary(){
 function escHtml(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // ── INIT ──
-sb.auth.getSession().then(function(res){
+(async function(){
+  var res=await sb.auth.getSession();
   var session=res&&res.data&&res.data.session?res.data.session:null;
+  if(!session){await new Promise(function(r){setTimeout(r,1500);});res=await sb.auth.getSession();session=res&&res.data&&res.data.session?res.data.session:null;}
   if(!session){document.body.classList.add('paywalled');updateNavAuth(false);return;}
   currentUser=session.user;
   document.getElementById('user-email').textContent=currentUser.email;
@@ -618,7 +620,7 @@ sb.auth.getSession().then(function(res){
     renderCondList();
     goStep(currentStep);
   }
-}).catch(function(){window.location.href='login.html';});
+})();
 </script>
 <script src="vera-widget.js"></script>
 </body>

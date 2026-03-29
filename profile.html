@@ -340,8 +340,10 @@ FIELDS.forEach(function(f){
 });
 
 // Init
-sb.auth.getSession().then(function(res){
+(async function(){
+  var res=await sb.auth.getSession();
   var session=res&&res.data&&res.data.session?res.data.session:null;
+  if(!session){await new Promise(function(r){setTimeout(r,1500);});res=await sb.auth.getSession();session=res&&res.data&&res.data.session?res.data.session:null;}
   if(!session){window.location.href='login.html';return;}
   currentUser=session.user;
   document.getElementById('user-email').textContent=currentUser.email;
@@ -351,9 +353,7 @@ sb.auth.getSession().then(function(res){
     if(plan!=='pro'&&plan!=='earned')addNavLocks();
   }).catch(function(){addNavLocks();});
   loadProfile();
-}).catch(function(){
-  window.location.href='login.html';
-});
+})();
 </script>
 <script src="vera-widget.js"></script>
 </body>

@@ -443,8 +443,10 @@ function renderConditions(conditions){
 }
 
 // Init
-sb.auth.getSession().then(function(res){
+(async function(){
+  var res=await sb.auth.getSession();
   var session=res&&res.data&&res.data.session?res.data.session:null;
+  if(!session){await new Promise(function(r){setTimeout(r,1500);});res=await sb.auth.getSession();session=res&&res.data&&res.data.session?res.data.session:null;}
   if(!session){document.body.classList.add('paywalled');updateNavAuth(false);return;}
   currentUser=session.user;
   sessionToken=session.access_token;
@@ -458,7 +460,7 @@ sb.auth.getSession().then(function(res){
     userConditions=qr.data||[];
     renderConditions(userConditions);
   }).catch(function(){renderConditions([]);});
-}).catch(function(){window.location.href='login.html';});
+})();
 </script>
 <script src="vera-widget.js"></script>
 </body>

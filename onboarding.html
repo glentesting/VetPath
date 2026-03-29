@@ -442,8 +442,10 @@ var BRANCH_MAP={'Army':'Army','Navy':'Navy','Marine Corps':'Marines','Air Force'
   });
 })();
 
-sb.auth.getSession().then(function(res){
+(async function(){
+  var res=await sb.auth.getSession();
   var session=res&&res.data&&res.data.session?res.data.session:null;
+  if(!session){await new Promise(function(r){setTimeout(r,1500);});res=await sb.auth.getSession();session=res&&res.data&&res.data.session?res.data.session:null;}
   if(!session){window.location.href='login.html';return;}
   currentUser=session.user;
   if(localStorage.getItem('ur_onboarded_'+currentUser.id)){

@@ -427,8 +427,10 @@ document.getElementById('file-input').addEventListener('change',function(){
 });
 
 // AUTH - check session, silently swap to dashboard if data exists
-sb.auth.getSession().then(function(res){
+(async function(){
+  var res=await sb.auth.getSession();
   var session=res&&res.data&&res.data.session?res.data.session:null;
+  if(!session){await new Promise(function(r){setTimeout(r,1500);});res=await sb.auth.getSession();session=res&&res.data&&res.data.session?res.data.session:null;}
   if(!session){document.body.classList.add('paywalled');updateNavAuth(false);return;}
   currentUser=session.user;
   document.getElementById('user-email').textContent=currentUser.email;
@@ -455,7 +457,7 @@ sb.auth.getSession().then(function(res){
     .catch(function(e){console.error('query catch:',e);document.getElementById('loading-note').style.display='none';});
   // Load documents list
   loadDocuments();
-}).catch(function(e){console.error('getSession:',e);});
+})();
 
 function loadDocuments(){
   sb.from('uploads').select('id,original_filename,file_url,conditions_found,uploaded_at')

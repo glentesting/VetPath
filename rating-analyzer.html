@@ -288,8 +288,10 @@ function renderResults(analysis){
 }
 
 // Init
-sb.auth.getSession().then(function(res){
+(async function(){
+  var res=await sb.auth.getSession();
   var session=res&&res.data&&res.data.session?res.data.session:null;
+  if(!session){await new Promise(function(r){setTimeout(r,1500);});res=await sb.auth.getSession();session=res&&res.data&&res.data.session?res.data.session:null;}
   if(!session){document.body.classList.add('paywalled');updateNavAuth(false);return;}
   currentUser=session.user;sessionToken=session.access_token;
   document.getElementById('user-email').textContent=currentUser.email;
@@ -301,7 +303,7 @@ sb.auth.getSession().then(function(res){
   sb.from('conditions').select('name,rating,decision').eq('user_id',currentUser.id).then(function(qr){
     userConditions=qr.data||[];showConditions(userConditions);
   }).catch(function(){showConditions([]);});
-}).catch(function(){window.location.href='login.html';});
+})();
 </script>
 <script src="vera-widget.js"></script>
 </body>

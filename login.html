@@ -136,7 +136,7 @@ async function handleReset(){
 [emailEl,passEl].forEach(el=>{el.addEventListener('keydown',e=>{if(e.key==='Enter')handleLogin();});});
 
 // Only redirect if already logged in
-sb.auth.getSession().then(({data})=>{if(data.session)window.location.href='dashboard.html';});
+setTimeout(function(){sb.auth.getSession().then(function(res){if(res.data&&res.data.session)window.location.href='dashboard.html';});},500);
 
 function handleGoogleSignIn() {
   sb.auth.signInWithOAuth({

@@ -281,26 +281,11 @@ function handleSignout(){
 
 // NO loading screen. Page renders immediately.
 // Just check session and populate data if logged in.
-sb.auth.getSession().then(function(res){
+(async function(){
+  var res=await sb.auth.getSession();
   var session=res&&res.data&&res.data.session?res.data.session:null;
-
-  if(!session){
-    // After Stripe checkout redirect, session may not be restored yet.
-    // Retry once after a short delay before giving up and redirecting to login.
-    if(!window._authRetried){
-      window._authRetried=true;
-      setTimeout(function(){
-        sb.auth.getSession().then(function(r2){
-          var s2=r2&&r2.data&&r2.data.session?r2.data.session:null;
-          if(s2){window.location.reload();}
-          else{window.location.href='login.html';}
-        }).catch(function(){window.location.href='login.html';});
-      },1500);
-      return;
-    }
-    window.location.href='login.html';
-    return;
-  }
+  if(!session){await new Promise(function(r){setTimeout(r,1500);});res=await sb.auth.getSession();session=res&&res.data&&res.data.session?res.data.session:null;}
+  if(!session){window.location.href='login.html';return;}
 
   // Set user info
   var email=session.user.email;
@@ -373,10 +358,7 @@ sb.auth.getSession().then(function(res){
       console.error('conditions query error:',err);
     });
 
-}).catch(function(err){
-  console.error('getSession error:',err);
-  window.location.href='login.html';
-});
+})();
 </script>
 <script src="vera-widget.js"></script>
 </body>
