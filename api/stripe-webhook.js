@@ -12,8 +12,11 @@
 // After creating, copy the Signing Secret → STRIPE_WEBHOOK_SECRET in Vercel
 
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 
 export const config = { runtime: 'edge' };
+
+const SUPABASE_URL = 'https://bglhfmwjfnmybcrjlscm.supabase.co';
 
 export default async function handler(req) {
   if (req.method !== 'POST') {
@@ -29,7 +32,6 @@ export default async function handler(req) {
 
   let event;
   try {
-    // Verify webhook signature
     event = await stripe.webhooks.constructEventAsync(
       body,
       sig,
@@ -42,87 +44,98 @@ export default async function handler(req) {
     });
   }
 
+  console.log('Stripe webhook received:', event.type);
+
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!SUPABASE_KEY) {
+    console.error('SUPABASE_SERVICE_ROLE_KEY is not set');
+    return new Response(JSON.stringify({ received: true, error: 'Missing service role key' }), {
+      status: 200, headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  const adminClient = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  });
+
+  // ── CHECKOUT COMPLETED — set plan to 'earned' ──
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const userEmail = session.customer_email;
     const userId = session.metadata?.supabase_user_id;
 
+    console.log('Checkout completed — email:', userEmail, 'userId from metadata:', userId);
+
     if (!userEmail && !userId) {
-      console.error('No user identifier in checkout session');
+      console.error('No user identifier in checkout session — cannot update plan');
       return new Response(JSON.stringify({ received: true }), {
         status: 200, headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    const SUPABASE_URL = 'https://bglhfmwjfnmybcrjlscm.supabase.co';
-    const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    let targetUserId = userId;
 
-    try {
-      // If we have userId from metadata, update directly
-      if (userId) {
-        await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({ plan: 'pro' })
-        });
-      } else {
-        // Fallback: look up user by email in auth.users, then update profiles
-        const usersRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users?filter=email%3D${encodeURIComponent(userEmail)}`, {
-          headers: {
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`
+    // If no userId in metadata, look up by email
+    if (!targetUserId && userEmail) {
+      console.log('No userId in metadata, looking up by email:', userEmail);
+      try {
+        const { data: { users }, error: listErr } = await adminClient.auth.admin.listUsers();
+        if (listErr) {
+          console.error('Failed to list users:', listErr.message);
+        } else {
+          const match = users.find(u => u.email === userEmail);
+          if (match) {
+            targetUserId = match.id;
+            console.log('Found user by email, id:', targetUserId);
+          } else {
+            console.error('No user found with email:', userEmail, '— searched', users.length, 'users');
           }
-        });
-        const usersData = await usersRes.json();
-        const user = usersData?.users?.[0];
-
-        if (user) {
-          // Upsert profile with pro plan
-          await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'apikey': SUPABASE_KEY,
-              'Authorization': `Bearer ${SUPABASE_KEY}`,
-              'Prefer': 'resolution=merge-duplicates'
-            },
-            body: JSON.stringify({ user_id: user.id, plan: 'pro' })
-          });
         }
+      } catch (e) {
+        console.error('Exception looking up user by email:', e.message);
       }
-    } catch (err) {
-      console.error('Failed to update user plan:', err);
+    }
+
+    if (!targetUserId) {
+      console.error('Could not resolve user ID — plan NOT updated');
+      return new Response(JSON.stringify({ received: true }), {
+        status: 200, headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Upsert profile with plan = 'earned'
+    console.log('Setting plan to earned for user:', targetUserId);
+    const { error: upsertErr } = await adminClient
+      .from('profiles')
+      .upsert({ user_id: targetUserId, plan: 'earned' }, { onConflict: 'user_id' });
+
+    if (upsertErr) {
+      console.error('FAILED to upsert plan:', upsertErr.message, upsertErr.details, upsertErr.hint);
+    } else {
+      console.log('SUCCESS — plan set to earned for user:', targetUserId);
     }
   }
 
-  // Handle subscription cancellation
+  // ── SUBSCRIPTION DELETED — set plan back to 'free' ──
   if (event.type === 'customer.subscription.deleted') {
     const subscription = event.data.object;
     const userId = subscription.metadata?.supabase_user_id;
 
-    if (userId) {
-      const SUPABASE_URL = 'https://bglhfmwjfnmybcrjlscm.supabase.co';
-      const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    console.log('Subscription deleted — userId from metadata:', userId);
 
-      try {
-        await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${userId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': SUPABASE_KEY,
-            'Authorization': `Bearer ${SUPABASE_KEY}`,
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({ plan: 'free' })
-        });
-      } catch (err) {
-        console.error('Failed to downgrade user plan:', err);
+    if (userId) {
+      const { error: downgradeErr } = await adminClient
+        .from('profiles')
+        .update({ plan: 'free' })
+        .eq('user_id', userId);
+
+      if (downgradeErr) {
+        console.error('FAILED to downgrade plan:', downgradeErr.message);
+      } else {
+        console.log('SUCCESS — plan set to free for user:', userId);
       }
+    } else {
+      console.error('No userId in subscription metadata — cannot downgrade');
     }
   }
 
