@@ -37,7 +37,8 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
 .nav-links .mobile-section-label{display:none}
 .nav-links .mobile-divider{display:none}
 .nav-right{display:flex;align-items:center;gap:14px}
-.user-email{font-size:13px;color:var(--ink-3);font-family:var(--ff-mono)}
+.user-email{cursor:pointer;text-decoration:none;color:inherit;font-size:13px;color:var(--ink-3);font-family:var(--ff-mono)}
+.user-email:hover,.user-pill:hover{text-decoration:underline}
 .signout-btn{font-size:13px;color:var(--ink-3);background:none;border:1px solid var(--border-2);border-radius:8px;padding:6px 14px;cursor:pointer;transition:all .15s;font-family:var(--ff-body)}
 .signout-btn:hover{color:var(--ink);border-color:var(--ink-3)}
 .hamburger{display:none;background:none;border:1.5px solid var(--border-2);border-radius:8px;padding:6px 11px;cursor:pointer;color:var(--ink-2);font-family:var(--ff-mono);font-size:14px;line-height:1;align-items:center;gap:5px;transition:all .15s}
@@ -95,8 +96,9 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
 @media(max-width:780px){
   nav{padding:0 16px}
   .hamburger{display:flex}
-  .user-email{display:none}
-  .signout-btn{display:none}
+  .user-email{cursor:pointer;text-decoration:none;color:inherit;display:none}
+  .user-email:hover,.user-pill:hover{text-decoration:underline}
+.signout-btn{display:none}
   .nav-links{display:none;position:absolute;top:64px;left:-16px;right:-16px;background:var(--surface);border-bottom:1.5px solid var(--border-2);flex-direction:column;padding:8px 20px 14px;gap:0;z-index:99}
   .nav-links.open{display:flex}
   .nav-links>a{padding:11px 0;border-bottom:1px solid var(--border);font-size:15px;color:var(--ink-2)}
@@ -145,7 +147,7 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
       <button class="mobile-signout" onclick="handleSignout()">Sign out</button>
     </div>
     <div class="nav-right">
-      <span class="user-email" id="user-email"></span>
+      <a href="profile.html" class="user-email" id="user-email"></a>
       <button class="hamburger" onclick="toggleNav()">&#9776; Menu</button>
       <button class="signout-btn" onclick="handleSignout()">Sign out</button>
     </div>

@@ -40,7 +40,8 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
 .nav-links .mobile-divider{display:none}
 .nav-links .mobile-tools-header{display:none}
 .nav-right{display:flex;align-items:center;gap:14px}
-.user-email{font-size:13px;color:var(--ink-3);font-family:var(--ff-mono)}
+.user-email{cursor:pointer;text-decoration:none;color:inherit;font-size:13px;color:var(--ink-3);font-family:var(--ff-mono)}
+.user-email:hover,.user-pill:hover{text-decoration:underline}
 .signout-btn{font-size:13px;color:var(--ink-3);background:none;border:1px solid var(--border-2);border-radius:8px;padding:6px 14px;cursor:pointer;transition:all .15s;font-family:var(--ff-body)}
 .signout-btn:hover{color:var(--ink);border-color:var(--ink-3)}
 .hamburger{display:none;background:none;border:1.5px solid var(--border-2);border-radius:8px;padding:6px 11px;cursor:pointer;color:var(--ink-2);font-family:var(--ff-mono);font-size:14px;line-height:1;align-items:center;gap:5px;transition:all .15s}
@@ -97,8 +98,9 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
   .grid-top,.grid-bottom{grid-template-columns:1fr}
   nav{padding:0 16px}
   .hamburger{display:flex}
-  .user-email{display:none}
-  .signout-btn{display:none}
+  .user-email{cursor:pointer;text-decoration:none;color:inherit;display:none}
+  .user-email:hover,.user-pill:hover{text-decoration:underline}
+.signout-btn{display:none}
   .nav-links{display:none;position:absolute;top:64px;left:-16px;right:-16px;background:var(--surface);border-bottom:1.5px solid var(--border-2);flex-direction:column;padding:8px 20px 14px;gap:0;z-index:99}
   .nav-links.open{display:flex}
   .nav-links>a{padding:11px 0;border-bottom:1px solid var(--border);font-size:15px;color:var(--ink-2)}
@@ -151,6 +153,7 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
       </div>
       <div class="mobile-divider"></div>
       <div id="nav-auth-items">
+        <a href="profile.html">Profile</a>
         <a href="dashboard.html">Dashboard</a>
         <button class="mobile-signout" onclick="handleSignout()">Sign out</button>
       </div>
@@ -160,7 +163,7 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
       </div>
     </div>
     <div class="nav-right">
-      <span class="user-email" id="user-email"></span>
+      <a href="profile.html" class="user-email" id="user-email"></a>
       <a href="login.html" id="nav-login-desktop" style="display:none;font-size:13px;color:var(--ink-3)">Log in</a>
       <a href="signup.html" id="nav-signup-desktop" style="display:none;font-size:13px;color:#fff;background:var(--green);padding:7px 16px;border-radius:8px;font-weight:500;white-space:nowrap">Sign up</a>
       <button class="hamburger" onclick="toggleNav()">&#9776; Menu</button>
@@ -294,7 +297,7 @@ function handleSignout(){
   var hour=new Date().getHours();
   var timeGreeting=hour>=5&&hour<12?'Good morning':hour>=12&&hour<17?'Good afternoon':'Good evening';
   document.getElementById('greeting-text').textContent=timeGreeting+'.';
-  document.getElementById('greeting-sub').textContent='Logged in as '+email;
+  document.getElementById('greeting-sub').innerHTML='Logged in as '+email+' &middot; <a href="profile.html" style="color:var(--green);font-weight:500;font-size:13px">Edit profile \u2192</a>';
 
   // Check for upgrade success
   if(window.location.search.includes('upgraded=true')){

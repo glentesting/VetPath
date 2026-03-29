@@ -49,7 +49,8 @@
   .nav-links .mobile-tools-header{display:none}
   .nav-right{display:flex;align-items:center;gap:12px}
   .user-pill{font-size:12px;color:var(--ink-3);font-family:var(--ff-mono);background:var(--bg-2);padding:5px 10px;border-radius:20px}
-  .signout-btn{font-size:13px;color:var(--ink-3);background:none;border:1px solid var(--border-2);border-radius:8px;padding:6px 14px;cursor:pointer;transition:all .15s}
+  .user-pill:hover{text-decoration:underline}
+.signout-btn{font-size:13px;color:var(--ink-3);background:none;border:1px solid var(--border-2);border-radius:8px;padding:6px 14px;cursor:pointer;transition:all .15s}
   .signout-btn:hover{color:var(--ink);border-color:var(--ink-3)}
   .hamburger{display:none;background:none;border:1.5px solid var(--border-2);border-radius:8px;padding:6px 11px;cursor:pointer;color:var(--ink-2);font-family:var(--ff-mono);font-size:14px;line-height:1;align-items:center;gap:5px;transition:all .15s}
   .hamburger:hover{border-color:var(--ink-3);color:var(--ink)}
@@ -161,7 +162,8 @@
     .layout{grid-template-columns:1fr}
     nav{padding:0 16px}
     .user-pill{display:none}
-    .signout-btn{display:none}
+    .user-pill:hover{text-decoration:underline}
+.signout-btn{display:none}
     .hamburger{display:flex}
     .nav-links{display:none;position:absolute;top:64px;left:-16px;right:-16px;background:var(--surface);border-bottom:1.5px solid var(--border-2);flex-direction:column;padding:8px 20px 14px;gap:0;z-index:99}
     .nav-links.open{display:flex}
@@ -223,6 +225,7 @@
       </div>
       <div class="mobile-divider"></div>
       <div id="nav-auth-items">
+        <a href="profile.html">Profile</a>
         <a href="dashboard.html">Dashboard</a>
         <button class="mobile-signout" onclick="handleSignout()">Sign out</button>
       </div>
@@ -232,7 +235,7 @@
       </div>
     </div>
     <div class="nav-right">
-      <span class="user-pill" id="user-email"></span>
+      <a href="profile.html" class="user-pill" id="user-email"></a>
       <a href="login.html" id="nav-login-desktop" style="display:none;font-size:13px;color:var(--ink-3)">Log in</a>
       <a href="signup.html" id="nav-signup-desktop" style="display:none;font-size:13px;color:#fff;background:var(--green);padding:7px 16px;border-radius:8px;font-weight:500;white-space:nowrap">Sign up</a>
       <button class="signout-btn" id="nav-signout-desktop" onclick="handleSignout()">Sign out</button>
