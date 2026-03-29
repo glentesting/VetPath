@@ -304,10 +304,11 @@ sb.auth.getSession().then(function(res){
 
   // Set user info
   var email=session.user.email;
-  var name=email.split('@')[0].replace(/[._]/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
   document.getElementById('user-email').textContent=email;
   updateNavAuth(true);
-  document.getElementById('greeting-text').textContent='Welcome back, '+name;
+  var hour=new Date().getHours();
+  var timeGreeting=hour>=5&&hour<12?'Good morning':hour>=12&&hour<17?'Good afternoon':'Good evening';
+  document.getElementById('greeting-text').textContent=timeGreeting+'.';
   document.getElementById('greeting-sub').textContent='Logged in as '+email;
 
   // Check for upgrade success
@@ -321,9 +322,11 @@ sb.auth.getSession().then(function(res){
     history.replaceState(null,'','/dashboard.html');
   }
 
-  // Check plan — show upgrade banner and lock icons for free users
-  sb.from('profiles').select('plan').eq('user_id',session.user.id).single().then(function(pr){
+  // Check plan + load first name for greeting
+  sb.from('profiles').select('plan,first_name').eq('user_id',session.user.id).single().then(function(pr){
     var plan=(pr.data&&pr.data.plan)||'free';
+    var firstName=pr.data&&pr.data.first_name?pr.data.first_name:'';
+    if(firstName)document.getElementById('greeting-text').textContent=timeGreeting+', '+firstName+'.';
     if(plan!=='pro'&&plan!=='earned'){document.getElementById('upgrade-banner').style.display='flex';addNavLocks();}
   }).catch(function(){document.getElementById('upgrade-banner').style.display='flex';addNavLocks();});
 

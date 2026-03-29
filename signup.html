@@ -76,6 +76,10 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
     <div class="success-box" id="success-box"><strong>Account created.</strong>Setting up your profile...</div>
     <div id="form-wrap">
       <div class="form-group">
+        <label class="form-label" for="first-name">First name</label>
+        <input class="form-input" type="text" id="first-name" placeholder="First name" autocomplete="given-name" autocapitalize="words" maxlength="50">
+      </div>
+      <div class="form-group">
         <label class="form-label" for="email">Email address</label>
         <input class="form-input" type="email" id="email" placeholder="you@example.com" autocomplete="email">
       </div>
@@ -99,9 +103,11 @@ const SUPABASE_URL='https://bglhfmwjfnmybcrjlscm.supabase.co';
 const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnbGhmbXdqZm5teWJjcmpsc2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzk2MjYsImV4cCI6MjA4OTg1NTYyNn0.Pd1mHpNdHWAh4OKsPBXpCs86OXNOYMPxxhGVwBuEqqI';
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
+const nameEl=document.getElementById('first-name');
 const emailEl=document.getElementById('email');
 const passEl=document.getElementById('password');
 const pass2El=document.getElementById('password2');
+nameEl.addEventListener('input',function(){if(this.value.length===1)this.value=this.value.toUpperCase();});
 const btn=document.getElementById('signup-btn');
 const errorBox=document.getElementById('error-box');
 const successBox=document.getElementById('success-box');
@@ -113,9 +119,11 @@ function setLoading(on){btn.disabled=on;btn.innerHTML=on?'<div class="spinner"><
 
 async function handleSignup(){
   clearError();
+  const firstName=nameEl.value.trim();
   const email=emailEl.value.trim();
   const pass=passEl.value;
   const pass2=pass2El.value;
+  if(!firstName)return showError('First name is required.');
   if(!email)return showError('Email is required.');
   if(!email.includes('@'))return showError('Enter a valid email address.');
   if(pass.length<8)return showError('Password must be at least 8 characters.');
@@ -132,12 +140,16 @@ async function handleSignup(){
     }
     return;
   }
+  // Save first name to profiles table
+  if(data&&data.user){
+    try{await sb.from('profiles').upsert({user_id:data.user.id,first_name:firstName},{onConflict:'user_id'});}catch(e){}
+  }
   formWrap.style.display='none';
   successBox.style.display='block';
   setTimeout(()=>window.location.href='onboarding.html',1200);
 }
 
-[emailEl,passEl,pass2El].forEach(el=>{el.addEventListener('keydown',e=>{if(e.key==='Enter')handleSignup();});});
+[nameEl,emailEl,passEl,pass2El].forEach(el=>{el.addEventListener('keydown',e=>{if(e.key==='Enter')handleSignup();});});
 sb.auth.getSession().then(({data})=>{if(data.session)window.location.href='dashboard.html';});
 
 function handleGoogleSignIn(){
