@@ -285,6 +285,19 @@ sb.auth.getSession().then(function(res){
   var session=res&&res.data&&res.data.session?res.data.session:null;
 
   if(!session){
+    // After Stripe checkout redirect, session may not be restored yet.
+    // Retry once after a short delay before giving up and redirecting to login.
+    if(!window._authRetried){
+      window._authRetried=true;
+      setTimeout(function(){
+        sb.auth.getSession().then(function(r2){
+          var s2=r2&&r2.data&&r2.data.session?r2.data.session:null;
+          if(s2){window.location.reload();}
+          else{window.location.href='login.html';}
+        }).catch(function(){window.location.href='login.html';});
+      },1500);
+      return;
+    }
     window.location.href='login.html';
     return;
   }
