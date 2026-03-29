@@ -2,6 +2,14 @@
 // STRIPE_SECRET_KEY — from Stripe dashboard > Developers > API keys
 // STRIPE_WEBHOOK_SECRET — from Stripe dashboard > Developers > Webhooks > signing secret
 // SUPABASE_SERVICE_ROLE_KEY — from Supabase dashboard > Settings > API > service_role key
+//
+// STRIPE WEBHOOK SETUP REQUIRED:
+// Dashboard → Developers → Webhooks → Add endpoint
+// URL: https://underratedvets.com/api/stripe-webhook
+// Events to listen for:
+//   - checkout.session.completed
+//   - customer.subscription.deleted
+// After creating, copy the Signing Secret → STRIPE_WEBHOOK_SECRET in Vercel
 
 import Stripe from 'stripe';
 
