@@ -173,7 +173,7 @@ window.veraSend=async function(){
   // Flow: check plan (cached after first call) → if free, check counter → if over limit, block
   var paid=await veraCheckPlan();
   if(!paid){
-    var count=parseInt(localStorage.getItem('vera_free_count')||'0');
+    var count=parseInt(localStorage.getItem('vera_free_msg_v2')||'0');
     if(count>=3){
       // Limit reached — show user's message then the upgrade nudge
       input.value='';
@@ -191,7 +191,7 @@ window.veraSend=async function(){
       return;
     }
     // Increment BEFORE the API call so it can't be bypassed
-    localStorage.setItem('vera_free_count',String(count+1));
+    localStorage.setItem('vera_free_msg_v2',String(count+1));
   }
 
   veraSending=true;
