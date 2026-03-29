@@ -103,6 +103,20 @@ vpInput.addEventListener('input',function(){this.style.height='auto';this.style.
 // State
 var veraMessages=[];
 var veraSending=false;
+var veraIsPaid=false;
+
+// Check plan for free message limit
+function veraCheckPlan(){
+  try{
+    if(window.sb&&window.currentUser){
+      window.sb.from('profiles').select('plan').eq('user_id',window.currentUser.id).single().then(function(r){
+        var plan=(r.data&&r.data.plan)||'free';
+        if(plan==='pro'||plan==='earned')veraIsPaid=true;
+      });
+    }
+  }catch(e){}
+}
+setTimeout(veraCheckPlan,1500);
 
 window.openVera=function(){
   document.getElementById('vera-panel').classList.add('open');
@@ -147,6 +161,28 @@ window.veraSend=async function(){
   var input=document.getElementById('vp-input');
   var text=input.value.trim();
   if(!text||veraSending)return;
+
+  // Free message limit (10 messages for non-paid users)
+  if(!veraIsPaid){
+    var count=parseInt(localStorage.getItem('vera_free_count')||'0');
+    if(count>=10){
+      input.value='';
+      veraAddMsg('user',text);
+      var container=document.getElementById('vp-messages');
+      var typing=document.getElementById('vp-typing');
+      var limitDiv=document.createElement('div');
+      limitDiv.className='vp-msg assistant';
+      limitDiv.innerHTML='<div class="vp-msg-label">VERA</div><div class="vp-msg-bubble"><p>You\u2019ve used your 10 free questions. To keep getting answers \u2014 on your conditions, your rating, your next steps \u2014 unlock EARNED for $39/mo. No lawyers. No cuts. Just the intel you need.</p><a href="upgrade.html" style="display:inline-block;margin-top:10px;padding:10px 20px;background:#0E8A63;color:#fff;border-radius:10px;font-size:14px;font-weight:500;text-decoration:none;font-family:DM Sans,sans-serif">Unlock EARNED \u2192</a></div>';
+      container.insertBefore(limitDiv,typing);
+      container.scrollTop=container.scrollHeight;
+      input.disabled=true;
+      input.placeholder='Free messages used \u2014 unlock EARNED to continue';
+      document.getElementById('vp-send').disabled=true;
+      return;
+    }
+    localStorage.setItem('vera_free_count',String(count+1));
+  }
+
   veraSending=true;
   input.value='';input.style.height='auto';
   document.getElementById('vp-send').disabled=true;
