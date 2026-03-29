@@ -507,6 +507,7 @@ function handleFile(file){
     return;
   }
   if(!file||file.type!=='application/pdf'){showErr('Please upload a PDF file \u2014 other formats are not supported.');return;}
+  if(file.size>4*1024*1024){showErr('This PDF is over 4MB. Try uploading a smaller file for faster results.');return;}
   document.getElementById('upload-error').style.display='none';
   document.getElementById('upload-progress').style.display='block';
   var dz=document.getElementById('drop-zone');if(dz){dz.style.pointerEvents='none';dz.style.opacity='0.5';}
@@ -521,7 +522,9 @@ function handleFile(file){
       // Get current session token to authenticate the API call
       return sb.auth.getSession().then(function(sr) {
         var token = sr.data && sr.data.session ? sr.data.session.access_token : '';
-        return fetch(VURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({file_url:fileUrl,user_id:currentUser.id})});
+        var ac=new AbortController();
+        var to=setTimeout(function(){ac.abort();},55000);
+        return fetch(VURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({file_url:fileUrl,user_id:currentUser.id}),signal:ac.signal}).then(function(r){clearTimeout(to);return r;});
       });
     })
     .then(function(res){
@@ -554,7 +557,7 @@ function handleFile(file){
         });
       },800);
     })
-    .catch(function(err){console.error('upload:',err);showErr(err.message||'Upload failed \u2014 the file may be too large (max 10MB) or your connection dropped. Try again.');});
+    .catch(function(err){console.error('upload:',err);if(err.name==='AbortError'||err.message==='The user aborted a request.'||(err.message&&err.message.includes('Failed to fetch'))){showErr('Extraction is taking longer than usual. Your PDF uploaded successfully \u2014 try clicking Upload again, or try a smaller PDF.');}else{showErr(err.message||'Upload failed \u2014 please try again.');}});
 }
 
 // RENDER

@@ -1,4 +1,4 @@
-export const config = { runtime: 'edge' };
+export const config = { runtime: 'nodejs', maxDuration: 60 };
 
 // Simple rate limiting via in-memory store (resets on cold start, good enough for MVP)
 const requestLog = new Map();
