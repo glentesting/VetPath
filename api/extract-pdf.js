@@ -116,8 +116,8 @@ export default async function handler(req) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 3000,
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1500,
         messages: [
           {
             role: 'user',
@@ -128,61 +128,25 @@ export default async function handler(req) {
               },
               {
                 type: 'text',
-                text: `You are a VA benefits document expert. Extract every piece of useful claims information from this VA document, regardless of document type or format.
-
-The document may be any of the following: rating decision letter, award/notification letter, denial letter, supplemental claim decision, C&P examination report, combined rating letter, HLR or BVA decision, or any other VA correspondence.
-
-EXTRACT ALL OF THE FOLLOWING that appear anywhere in the document:
-
-1. CONDITIONS — Every medical condition mentioned, including:
-   - Conditions that were SERVICE CONNECTED with a rating %
-   - Conditions that were DENIED service connection
-   - Conditions that were DEFERRED
-   - Conditions mentioned in C&P exams even without a rating
-   - Secondary conditions referenced
-   For each: name, diagnostic_code (if shown), rating percentage (or null), status, effective_date, and any relevant notes.
-
-2. COMBINED RATING — The veteran's overall combined rating % if mentioned anywhere
-
-3. EFFECTIVE DATES — Any effective dates for ratings or awards
-
-4. MONTHLY PAYMENT — Any dollar amounts listed as monthly compensation
-
-5. KEY DECISIONS — Any favorable findings, reasons for denial, appeal options mentioned
-
-6. DOCUMENT TYPE — What type of VA document this is
-
-Return ONLY valid JSON in this exact format — no markdown, no explanation:
+                text: `Extract VA benefits data from this document. Return ONLY valid JSON, no other text:
 {
-  "document_type": "Rating Decision Letter",
-  "combined_rating": 90,
-  "monthly_payment": 2044.89,
-  "effective_date": "2024-03-01",
+  "document_type": "string",
+  "combined_rating": number or null,
+  "monthly_payment": number or null,
   "conditions": [
     {
-      "condition_name": "PTSD",
-      "diagnostic_code": "9411",
-      "rating": 70,
-      "decision": "Service Connected",
-      "effective_date": "2023-09-03",
-      "notes": "any relevant notes"
+      "condition_name": "string",
+      "diagnostic_code": "string or null",
+      "rating": number or null,
+      "decision": "Service Connected|Denied|Deferred|Pending",
+      "notes": "string or null"
     }
   ],
-  "favorable_findings": ["string array"],
-  "denial_reasons": ["string array"],
-  "appeal_options": ["string array"],
-  "summary": "2-3 sentence plain English summary of what this document means for the veteran"
+  "favorable_findings": ["string"],
+  "denial_reasons": ["string"],
+  "summary": "1-2 sentence plain English summary"
 }
-
-Rules:
-- decision must be exactly: "Service Connected", "Denied", "Deferred", or "Pending"
-- rating must be an integer or null if no rating assigned
-- effective_date format: YYYY-MM-DD or null
-- diagnostic_code is a string or null
-- Use null or empty array [] for fields not found
-- Do NOT guess or fabricate — only extract what is explicitly stated
-- Include ALL conditions even denied, deferred, or unrated ones
-- Look across ALL pages — conditions may be scattered throughout`
+Include ALL conditions mentioned. decision values must be exactly: Service Connected, Denied, Deferred, or Pending. rating is integer or null. Use null for missing fields.`
               }
             ]
           }
