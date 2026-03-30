@@ -56,8 +56,8 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
 .user-pill{font-size:12px;color:var(--ink-3);font-family:var(--ff-mono);background:var(--bg-2);padding:5px 10px;border-radius:20px}
 .nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;font-family:var(--ff-display);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0;transition:opacity .15s}
 .nav-avatar:hover{opacity:.85}
-.signout-btn{font-size:13px;color:var(--ink-3);background:none;border:1px solid var(--border-2);border-radius:8px;padding:6px 14px;cursor:pointer;transition:all .15s;font-family:var(--ff-body)}
-.signout-btn:hover{color:var(--ink);border-color:var(--ink-3)}
+.signout-btn{font-size:13px;color:var(--ink-3);background:none;border:none;padding:0;cursor:pointer;transition:color .15s;font-family:var(--ff-body)}
+.signout-btn:hover{color:var(--ink)}
 .hamburger{display:none;background:none;border:1.5px solid var(--border-2);border-radius:8px;padding:6px 11px;cursor:pointer;color:var(--ink-2);font-family:var(--ff-mono);font-size:14px;line-height:1;align-items:center;gap:5px;transition:all .15s}
 .hamburger:hover{border-color:var(--ink-3);color:var(--ink)}
 .page{max-width:760px;margin:0 auto;padding:36px 28px 60px;animation:fadeUp .3s ease both}
@@ -279,7 +279,7 @@ function checkSMCL(conditions,combined){
 function renderResults(conditions){
   var el=document.getElementById('results');
   if(!conditions.length){
-    el.innerHTML='<div class="no-conditions"><div class="no-conditions-icon">&#128203;</div><div class="no-conditions-title">No conditions found</div><div class="no-conditions-sub">Upload your rating decision in the Vault or enter conditions in the Calculator first.</div><a href="vault.html" class="rc-file-btn">Upload rating decision &rarr;</a></div>';
+    el.innerHTML='<div class="no-conditions"><div class="no-conditions-icon">&#128203;</div><div class="no-conditions-title">No conditions found</div><div class="no-conditions-sub">To check TDIU and SMC eligibility, UNDERRATED needs your rated conditions. Upload your rating decision in the Vault and your conditions will appear here automatically.</div><a href="vault.html" class="rc-file-btn">Upload in Vault &rarr;</a></div>';
     return;
   }
   var combined=calcCombined(conditions);
@@ -342,9 +342,11 @@ function renderResults(conditions){
     var av=document.getElementById('nav-avatar');if(av)av.textContent=fn?fn[0].toUpperCase():'?';
     if(plan!=='pro'&&plan!=='earned'){document.body.classList.add('paywalled');addNavLocks();document.getElementById('paywall-cta').href='upgrade.html';document.getElementById('paywall-cta').textContent='Unlock EARNED \u2014 $39/mo';document.getElementById('paywall-alt').innerHTML='Already EARNED? <a href="login.html">Log in</a>';}
   }).catch(function(){document.body.classList.add('paywalled');addNavLocks();});
+  var conditionsLoaded=false;
   sb.from('conditions').select('name,rating,decision').eq('user_id',currentUser.id).then(function(qr){
-    renderResults(qr.data||[]);
-  }).catch(function(){renderResults([]);});
+    conditionsLoaded=true;renderResults(qr.data||[]);
+  }).catch(function(){conditionsLoaded=true;renderResults([]);});
+  setTimeout(function(){if(!conditionsLoaded)renderResults([]);},8000);
 })();
 </script>
 <script src="vera-widget.js"></script>
