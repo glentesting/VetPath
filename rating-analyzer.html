@@ -111,8 +111,13 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
   .nav-links .mobile-section-label{display:block;font-family:var(--ff-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);padding:14px 0 4px;border-bottom:none}
   .nav-links .mobile-divider{height:1px;background:var(--border-2);margin:6px 0}
   .nav-dropdown{border-bottom:none}.nav-dropdown-trigger{display:none}
-  .nav-dropdown-menu{opacity:1!important;visibility:visible!important;transform:none!important;transition:none;position:static;border:none;box-shadow:none;border-radius:0;padding:0;min-width:auto;background:transparent}
-  .nav-dropdown-menu a{margin:0;border-radius:0;padding:8px 0;font-size:15px;color:var(--ink-2);border-bottom:1px solid var(--border)}.nav-dropdown-menu a:last-child{border-bottom:none}
+  .nav-dropdown-menu{opacity:1!important;visibility:visible!important;transform:none!important;transition:none;position:static;border:none;box-shadow:none;border-radius:0;padding:0;min-width:auto!important;background:transparent}
+  .nav-dd-label{display:none}
+  .nav-dd-cols{display:block!important;grid-template-columns:none!important}
+  .nav-dd-divider{display:none}
+  .nav-dd-col{display:block}
+  .nav-dropdown-menu a{margin:0;border-radius:0;padding:11px 0;font-size:15px;color:var(--ink-2);border-bottom:1px solid var(--border);display:block}
+  .nav-dropdown-menu a:last-child{border-bottom:none}
   .nav-links .mobile-signout{display:block;padding:11px 0;font-size:15px;color:var(--red);cursor:pointer;border:none;background:none;font-family:var(--ff-body);width:100%;text-align:left}
   .page{padding:24px 16px 60px}.page-title{font-size:32px}.summary-strip{flex-direction:row}.summary-stat{min-width:0}
 }
@@ -126,7 +131,7 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
       <div class="mobile-section-label">FREE</div>
       <a href="calculator.html">Rating calculator</a>
       <a href="gap.html">Gap identifier</a>
-      <div class="mobile-section-label">PRO TOOLS</div>
+      <div class="mobile-section-label">EARNED TOOLS</div>
       <div class="nav-dropdown" id="nav-dropdown">
         <button class="nav-dropdown-trigger active" onclick="document.getElementById('nav-dropdown').classList.toggle('open')">Tools <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                 <div class="nav-dropdown-menu">
