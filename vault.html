@@ -65,8 +65,11 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
 .page-title{font-family:var(--ff-display);font-size:40px;font-weight:800;color:var(--ink);line-height:1;margin-bottom:6px}
 .page-sub{font-size:15px;color:var(--ink-3);margin-bottom:28px}
 /* DOC GUIDE */
-.doc-guide{background:var(--surface);border:1.5px solid var(--border-2);border-radius:16px;padding:22px;max-width:560px;margin:0 auto 20px;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
-.doc-guide-label{font-family:var(--ff-mono);font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.doc-guide{background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:14px 18px;max-width:560px;margin:24px auto 0}
+.doc-guide .doc-dd{display:none}
+.doc-guide.open .doc-dd{display:block}
+.doc-guide-label{font-family:var(--ff-mono);font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:0;display:flex;align-items:center;gap:6px;cursor:pointer}
+.doc-guide.open .doc-guide-label{margin-bottom:12px}
 .doc-dd{border:1px solid var(--border);border-radius:10px;margin-bottom:6px;overflow:hidden}
 .doc-dd:last-child{margin-bottom:0}
 .doc-dd-trigger{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;font-size:14px;font-weight:500;color:var(--ink);background:var(--bg);transition:background .15s;width:100%;border:none;font-family:var(--ff-body);text-align:left}
@@ -283,22 +286,6 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
   <div class="page-title">Vault</div>
   <p class="page-sub">Upload your VA rating decision PDF &mdash; we'll extract every condition automatically.</p>
 
-  <div class="doc-guide">
-    <div class="doc-guide-label">&#128196; How to get your VA documents</div>
-    <div class="doc-dd" onclick="this.classList.toggle('open')">
-      <button class="doc-dd-trigger">Rating Decision Letter <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <div class="doc-dd-body"><ol><li>Go to <a href="https://www.va.gov/claim-or-appeal-status/" target="_blank">va.gov/claim-or-appeal-status</a> and log in</li><li>Click <strong>MyVA</strong> &rarr; scroll to <strong>Claims &amp; Appeals</strong></li><li>Find your most recent claim &rarr; click <strong>View Details</strong></li><li>Download the decision letter PDF</li></ol></div>
-    </div>
-    <div class="doc-dd" onclick="this.classList.toggle('open')">
-      <button class="doc-dd-trigger">Combined DD-214 (Member 4) <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <div class="doc-dd-body"><ol><li>Go to <a href="https://milconnect.dmdc.osd.mil" target="_blank">milConnect (milconnect.dmdc.osd.mil)</a></li><li>Login with DS Logon or CAC</li><li>Click <strong>Correspondence/Documentation</strong> &rarr; <strong>Defense Personnel Records</strong></li><li>Request <strong>Member 4 copy</strong> (the one with character of discharge)</li><li>Or mail <a href="https://www.archives.gov/veterans/military-service-records/standard-form-180.html" target="_blank">SF-180</a> to: National Personnel Records Center</li></ol></div>
-    </div>
-    <div class="doc-dd" onclick="this.classList.toggle('open')">
-      <button class="doc-dd-trigger">VA Medical Records (Blue Button Report) <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-      <div class="doc-dd-body"><ol><li>Login at <a href="https://www.myhealth.va.gov/mhv-portal-web/download-my-data" target="_blank">myhealth.va.gov</a></li><li>Click <strong>Download My Data</strong> &rarr; <strong>Blue Button Report</strong></li><li>Select date range: <strong>all dates</strong></li><li>Download as PDF</li></ol></div>
-    </div>
-  </div>
-
   <div id="upload-state">
     <div class="upload-card">
       <h2>Upload your rating decision</h2>
@@ -323,12 +310,6 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
       <div class="loading-note" id="loading-note">Checking for existing records...</div>
     </div>
     <div class="alt-action">Don't have a PDF yet? <a href="calculator.html">Enter conditions manually in the calculator</a></div>
-  </div>
-
-  <div class="docs-section" id="docs-section" style="display:none">
-    <div class="docs-title">Your documents</div>
-    <div class="docs-sub">Previously uploaded rating decisions and records.</div>
-    <div id="docs-list"><div class="docs-empty">Loading your documents...</div></div>
   </div>
 
   <div id="dashboard">
@@ -390,6 +371,29 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
       <div class="ns-block"><div class="ns-icon">&#128209;</div><div class="ns-block-title">Analyze your decision</div><div class="ns-block-desc">Find wrong diagnostic codes, procedural errors, and appeal opportunities.</div><a href="rating-analyzer.html" class="ns-btn">Analyze decision &rarr;</a></div>
       <div class="ns-block"><div class="ns-icon">&#128218;</div><div class="ns-block-title">Prep for C&amp;P exam</div><div class="ns-block-desc">Get a personalized prep sheet so you don't undersell your symptoms.</div><a href="cp-prep.html" class="ns-btn">Start prep &rarr;</a></div>
     </div>
+
+  <div class="docs-section" id="docs-section" style="display:none">
+    <div class="docs-title">Your documents</div>
+    <div class="docs-sub">Previously uploaded rating decisions and records.</div>
+    <div id="docs-list"><div class="docs-empty">Loading your documents...</div></div>
+  </div>
+
+  <div class="doc-guide">
+    <div class="doc-guide-label" onclick="this.parentElement.classList.toggle('open')" style="cursor:pointer;margin-bottom:0">&#128196; How to get your VA documents <svg width="10" height="6" viewBox="0 0 10 6" fill="none" style="margin-left:auto"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="doc-dd" onclick="this.classList.toggle('open')">
+      <button class="doc-dd-trigger">Rating Decision Letter <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="doc-dd-body"><ol><li>Go to <a href="https://www.va.gov/claim-or-appeal-status/" target="_blank">va.gov/claim-or-appeal-status</a> and log in</li><li>Click <strong>MyVA</strong> &rarr; scroll to <strong>Claims &amp; Appeals</strong></li><li>Find your most recent claim &rarr; click <strong>View Details</strong></li><li>Download the decision letter PDF</li></ol></div>
+    </div>
+    <div class="doc-dd" onclick="this.classList.toggle('open')">
+      <button class="doc-dd-trigger">Combined DD-214 (Member 4) <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="doc-dd-body"><ol><li>Go to <a href="https://milconnect.dmdc.osd.mil" target="_blank">milConnect (milconnect.dmdc.osd.mil)</a></li><li>Login with DS Logon or CAC</li><li>Click <strong>Correspondence/Documentation</strong> &rarr; <strong>Defense Personnel Records</strong></li><li>Request <strong>Member 4 copy</strong> (the one with character of discharge)</li><li>Or mail <a href="https://www.archives.gov/veterans/military-service-records/standard-form-180.html" target="_blank">SF-180</a> to: National Personnel Records Center</li></ol></div>
+    </div>
+    <div class="doc-dd" onclick="this.classList.toggle('open')">
+      <button class="doc-dd-trigger">VA Medical Records (Blue Button Report) <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="doc-dd-body"><ol><li>Login at <a href="https://www.myhealth.va.gov/mhv-portal-web/download-my-data" target="_blank">myhealth.va.gov</a></li><li>Click <strong>Download My Data</strong> &rarr; <strong>Blue Button Report</strong></li><li>Select date range: <strong>all dates</strong></li><li>Download as PDF</li></ol></div>
+    </div>
+  </div>
+
   </div>
 </div>
 
