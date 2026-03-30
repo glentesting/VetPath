@@ -633,8 +633,12 @@ async function handleFile(file){
       // Upsert conditions — updates existing by (user_id,name), inserts new
       // REQUIRED: run in Supabase SQL Editor first:
       //   ALTER TABLE conditions ADD CONSTRAINT conditions_user_name_unique UNIQUE (user_id, name);
+      // Check existing conditions BEFORE save
+      var beforeRes=await sb.from('conditions').select('id,name').eq('user_id',currentUser.id);
+      console.log('[vault] Conditions BEFORE save:',beforeRes.data?beforeRes.data.length:0,beforeRes.data?beforeRes.data.map(function(c){return c.name;}):[]);
+
       var rows=extracted.conditions.map(function(c,i){return{user_id:currentUser.id,name:c.condition_name||c.name||'Unknown',rating:c.rating!=null?String(c.rating):null,diagnostic_code:c.diagnostic_code||null,decision:c.decision||null,effective_date:c.effective_date||null,sort_order:i};});
-      console.log('[vault] Saving',rows.length,'conditions...');
+      console.log('[vault] Saving',rows.length,'new conditions:',rows.map(function(r){return r.name;}));
       var upsertRes=await sb.from('conditions').upsert(rows,{onConflict:'user_id,name',ignoreDuplicates:false});
       if(upsertRes.error){
         console.error('[vault] Upsert error:',upsertRes.error.message,'— falling back to plain insert');
@@ -649,7 +653,9 @@ async function handleFile(file){
       setStep('step-save','done');
       setTimeout(function(){
         sb.from('conditions').select('*').eq('user_id',currentUser.id).then(function(r2){
-          var d=r2.data||[];d.sort(function(a,b){return(parseInt(b.rating)||0)-(parseInt(a.rating)||0);});
+          var d=r2.data||[];
+          console.log('[vault] Conditions AFTER save (rendering):',d.length,d.map(function(c){return c.name+':'+c.rating+'%';}));
+          d.sort(function(a,b){return(parseInt(b.rating)||0)-(parseInt(a.rating)||0);});
           renderDashboard(d);showDash();
           // Reset upload zone for next upload
           var dz=document.getElementById('drop-zone');if(dz){dz.style.pointerEvents='auto';dz.style.opacity='1';}
