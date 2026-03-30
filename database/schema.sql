@@ -120,6 +120,10 @@ CREATE POLICY IF NOT EXISTS "Users can insert own uploads"
   ON uploads FOR INSERT TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
+CREATE POLICY IF NOT EXISTS "Users can delete own uploads"
+  ON uploads FOR DELETE TO authenticated
+  USING (auth.uid() = user_id);
+
 
 -- ──────────────────────────────────────────
 -- 4. DIAGNOSTIC CODES — 38 CFR Part 4 rating criteria

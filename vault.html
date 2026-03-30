@@ -520,8 +520,11 @@ function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 async function deleteUpload(uploadId,fname){
   if(!confirm('Delete "'+fname+'"? The conditions from this document will remain in your vault.'))return;
-  var res=await sb.from('uploads').delete().eq('id',uploadId);
+  console.log('[vault] Deleting upload:',uploadId);
+  var res=await sb.from('uploads').delete().eq('id',uploadId).eq('user_id',currentUser.id);
+  console.log('[vault] Delete result:',res);
   if(res.error){alert('Could not delete: '+res.error.message);return;}
+  // Remove from UI immediately
   loadDocuments();
 }
 
