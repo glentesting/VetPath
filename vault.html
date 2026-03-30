@@ -588,13 +588,22 @@ async function handleFile(file){
     })
     .then(async function(extracted){
       if(!extracted.success||!extracted.conditions||!extracted.conditions.length)throw new Error('No conditions found. Make sure this is a VA rating decision letter.');
-      // Store rich extraction data
+      // Store rich extraction data — append to existing instead of replacing
       if(extracted.combined_rating!=null)localStorage.setItem('ur_combined_rating_'+currentUser.id,extracted.combined_rating);
-      if(extracted.summary)localStorage.setItem('ur_doc_summary_'+currentUser.id,extracted.summary);
+      if(extracted.summary){
+        var prevSummaries=localStorage.getItem('ur_doc_summary_'+currentUser.id)||'';
+        var newSummary=extracted.summary;
+        if(prevSummaries&&prevSummaries!==newSummary)newSummary=prevSummaries+' | '+newSummary;
+        localStorage.setItem('ur_doc_summary_'+currentUser.id,newSummary);
+      }
       if(extracted.document_type)localStorage.setItem('ur_doc_type_'+currentUser.id,extracted.document_type);
       if(extracted.monthly_payment)localStorage.setItem('ur_monthly_pay_'+currentUser.id,extracted.monthly_payment);
-      if(extracted.favorable_findings&&extracted.favorable_findings.length)localStorage.setItem('ur_favorable_'+currentUser.id,JSON.stringify(extracted.favorable_findings));
-      if(extracted.denial_reasons&&extracted.denial_reasons.length)localStorage.setItem('ur_denials_'+currentUser.id,JSON.stringify(extracted.denial_reasons));
+      if(extracted.favorable_findings&&extracted.favorable_findings.length){
+        try{var prev=JSON.parse(localStorage.getItem('ur_favorable_'+currentUser.id)||'[]');var merged=[...new Set([...prev,...extracted.favorable_findings])];localStorage.setItem('ur_favorable_'+currentUser.id,JSON.stringify(merged));}catch(e){localStorage.setItem('ur_favorable_'+currentUser.id,JSON.stringify(extracted.favorable_findings));}
+      }
+      if(extracted.denial_reasons&&extracted.denial_reasons.length){
+        try{var prev2=JSON.parse(localStorage.getItem('ur_denials_'+currentUser.id)||'[]');var merged2=[...new Set([...prev2,...extracted.denial_reasons])];localStorage.setItem('ur_denials_'+currentUser.id,JSON.stringify(merged2));}catch(e){localStorage.setItem('ur_denials_'+currentUser.id,JSON.stringify(extracted.denial_reasons));}
+      }
       setStep('step-extract','done');setStep('step-save','active');
       // Upsert conditions — updates existing by (user_id,name), inserts new
       // REQUIRED: run in Supabase SQL Editor first:
@@ -651,9 +660,9 @@ function renderDashboard(data){
     var conn=data.filter(function(x){return safeStr(x.decision).indexOf('service connected')!==-1&&safeStr(x.decision).indexOf('not')===-1;}).length;
     var dc=conn>0?conn:data.filter(function(x){return x.rating&&parseInt(x.rating)>0;}).length;
     document.getElementById('last-updated').textContent=data.length+' condition'+(data.length!==1?'s':'')+' · updated '+new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-    var officialStored=localStorage.getItem('ur_combined_rating_'+currentUser.id);
-    var displayRating=officialStored!=null?parseInt(officialStored):official;
-    var ratingSubText=officialStored!=null?'As stated in your VA rating decision':'Exact '+exact.toFixed(1)+'% \u2192 rounded to '+official+'%';
+    // Use calculated combined from ALL conditions in database
+    var displayRating=official;
+    var ratingSubText='Combined from '+data.length+' conditions \u2014 exact '+exact.toFixed(1)+'%';
     var monthlyPay=localStorage.getItem('ur_monthly_pay_'+currentUser.id);
     var compDisplay=monthlyPay?'$'+parseFloat(monthlyPay).toLocaleString('en-US',{minimumFractionDigits:0}):'$'+(COMP[displayRating]||0).toLocaleString('en-US',{minimumFractionDigits:0});
     var compSub=monthlyPay?'From your rating decision':'Veteran alone, no dependents';
