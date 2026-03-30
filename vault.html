@@ -542,28 +542,28 @@ async function handleFile(file){
   document.getElementById('upload-progress').style.display='block';
   var dz=document.getElementById('drop-zone');if(dz){dz.style.pointerEvents='none';dz.style.opacity='0.5';}
   var fname=currentUser.id+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-
-  // Read file as base64 on frontend BEFORE upload
-  console.log('[vault] Step 0: reading file as base64, size:',file.size);
-  var base64Data=await new Promise(function(resolve,reject){var reader=new FileReader();reader.onload=function(e){resolve(e.target.result.split(',')[1]);};reader.onerror=reject;reader.readAsDataURL(file);});
-  console.log('[vault] Step 1: base64 ready, length:',base64Data.length,'uploading to storage as',fname);
-
+  console.log('[vault] Step 1: uploading to storage as',fname,'size:',file.size);
   setStep('step-upload','active');
   sb.storage.from('rating-decisions').upload(fname,file,{upsert:true})
-    .then(function(r){
+    .then(async function(r){
       if(r.error){console.error('[vault] Storage upload error:',r.error);throw new Error('Upload failed: '+r.error.message);}
       console.log('[vault] Step 2: storage upload done');
       setStep('step-upload','done');
-      var fileUrl=sb.storage.from('rating-decisions').getPublicUrl(fname).data.publicUrl;
-      console.log('[vault] Step 3: public URL:',fileUrl);
+      // Generate a signed URL (pre-authenticated, works for 5 min)
+      var signedRes=await sb.storage.from('rating-decisions').createSignedUrl(fname,300);
+      if(signedRes.error){console.error('[vault] Signed URL error:',signedRes.error);throw new Error('Could not create signed URL');}
+      var fileUrl=signedRes.data.signedUrl;
+      console.log('[vault] Step 3: signed URL ready');
       setStep('step-extract','active');
-      return sb.auth.getSession().then(function(sr) {
-        var token = sr.data && sr.data.session ? sr.data.session.access_token : '';
-        console.log('[vault] Step 4: calling extract-pdf at',VURL,'with base64 (skipping server fetch)');
-        var ac=new AbortController();
-        var to=setTimeout(function(){ac.abort();},58000);
-        return fetch(VURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({file_url:fileUrl,user_id:currentUser.id,pdf_base64:base64Data}),signal:ac.signal}).then(function(r){clearTimeout(to);console.log('[vault] Step 5: extract-pdf response status:',r.status);return r;});
-      });
+      var sr=await sb.auth.getSession();
+      var token=sr.data&&sr.data.session?sr.data.session.access_token:'';
+      console.log('[vault] Step 4: calling extract-pdf at',VURL);
+      var ac=new AbortController();
+      var to=setTimeout(function(){ac.abort();},58000);
+      var resp=await fetch(VURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({file_url:fileUrl,user_id:currentUser.id}),signal:ac.signal});
+      clearTimeout(to);
+      console.log('[vault] Step 5: extract-pdf response status:',resp.status);
+      return resp;
     })
     .then(function(res){
       if(!res.ok)return res.json().then(function(e){throw new Error(e.error||'We could not read this PDF \u2014 make sure it\u2019s a VA rating decision letter, not a scanned image.');});
