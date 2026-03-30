@@ -70,8 +70,12 @@ export default async function handler(req) {
     }
 
     // Fetch the PDF
+    console.log('Fetching PDF from:', file_url);
+    const fetchStart = Date.now();
     const pdfResponse = await fetch(file_url);
+    console.log('PDF fetch status:', pdfResponse.status, 'took:', Date.now() - fetchStart, 'ms');
     if (!pdfResponse.ok) {
+      console.error('PDF fetch failed:', pdfResponse.status, pdfResponse.statusText);
       return new Response(JSON.stringify({ error: 'Could not retrieve your PDF from storage. The file may have been deleted or the link expired — try uploading again.' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }
@@ -80,6 +84,7 @@ export default async function handler(req) {
 
     // File size check - reject anything over 20MB
     const contentLength = pdfResponse.headers.get('content-length');
+    console.log('PDF size:', contentLength ? Math.round(parseInt(contentLength)/1024) + 'KB' : 'unknown');
     if (contentLength && parseInt(contentLength) > 20 * 1024 * 1024) {
       return new Response(JSON.stringify({ error: 'File too large. Max 20MB.' }), {
         status: 400,
@@ -97,8 +102,11 @@ export default async function handler(req) {
       binary += String.fromCharCode.apply(null, chunk);
     }
     const pdfBase64 = btoa(binary);
+    console.log('PDF converted to base64, length:', pdfBase64.length, 'chars');
 
     // Call Claude API with comprehensive VA document extraction prompt
+    console.log('Calling Claude API...');
+    const claudeStart = Date.now();
     const claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -181,7 +189,10 @@ Rules:
       })
     });
 
+    console.log('Claude API response:', claudeResponse.status, 'took:', Date.now() - claudeStart, 'ms');
     if (!claudeResponse.ok) {
+      const errBody = await claudeResponse.text();
+      console.error('Claude API error:', claudeResponse.status, errBody);
       return new Response(JSON.stringify({ error: 'Our AI could not process this document right now. Please try again in a few seconds.' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json' }

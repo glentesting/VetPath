@@ -530,7 +530,7 @@ function handleFile(file){
       return sb.auth.getSession().then(function(sr) {
         var token = sr.data && sr.data.session ? sr.data.session.access_token : '';
         var ac=new AbortController();
-        var to=setTimeout(function(){ac.abort();},55000);
+        var to=setTimeout(function(){ac.abort();},58000);
         return fetch(VURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({file_url:fileUrl,user_id:currentUser.id}),signal:ac.signal}).then(function(r){clearTimeout(to);return r;});
       });
     })

@@ -463,10 +463,11 @@ function renderConditions(conditions){
     if(plan!=='pro'&&plan!=='earned'){document.body.classList.add('paywalled');addNavLocks();document.getElementById('paywall-cta').href='upgrade.html';document.getElementById('paywall-cta').textContent='Unlock EARNED \u2014 $39/mo';document.getElementById('paywall-alt').innerHTML='Already EARNED? <a href="login.html">Log in</a>';}
   }).catch(function(){document.body.classList.add('paywalled');addNavLocks();});
   var conditionsLoaded=false;
-  sb.from('conditions').select('name,rating,decision').eq('user_id',currentUser.id).then(function(qr){
-    conditionsLoaded=true;userConditions=qr.data||[];renderConditions(userConditions);
-  }).catch(function(){conditionsLoaded=true;renderConditions([]);});
-  setTimeout(function(){if(!conditionsLoaded)renderConditions([]);},8000);
+  function handleConditions(data){if(conditionsLoaded)return;conditionsLoaded=true;userConditions=data||[];renderConditions(userConditions);}
+  sb.from('conditions').select('name,rating,decision').eq('user_id',currentUser.id)
+    .then(function(qr){handleConditions(qr.data);})
+    .catch(function(){handleConditions([]);});
+  setTimeout(function(){handleConditions([]);},5000);
 })();
 </script>
 <script src="vera-widget.js"></script>
