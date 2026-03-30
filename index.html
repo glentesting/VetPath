@@ -266,8 +266,26 @@ footer{background:var(--surface);border-top:1.5px solid var(--border);padding:36
   /* 5. FINAL CTA */
   .final-cta h2{font-size:32px!important;word-break:keep-all}
   .final-cta .sub{font-size:15px}
+
+  /* 6. TRUST STRIP — mobile restructure */
+  .sp-orgs-desktop{display:none!important}
+  .sp-orgs-mobile{display:block!important}
+  .trust-inner{overflow:hidden}
+
+  /* 7. REAL VETS heading */
+  .social-proof-label{font-size:20px!important;border-left:3px solid var(--green);padding-left:12px;text-align:left!important}
+
+  /* 8. MOST VETS section */
+  .validate-body{text-align:left!important;line-height:1.7!important;padding:0 4px}
+
+  /* 9. Mobile line breaks */
+  .mobile-br{display:block}
 }
 .mobile-carousel{display:none}
+.sp-orgs-mobile{display:none}
+.mobile-br{display:none}
+.trust-label-m{font-size:11px;color:var(--ink-3);text-align:center;margin-bottom:8px;font-family:var(--ff-body)}
+.trust-names-m{font-family:var(--ff-mono);font-size:12px;color:var(--ink-2);text-align:center;letter-spacing:.05em;text-transform:uppercase;line-height:1.8}
 
   /* TEASER PREVIEW */
   .teaser-section{padding:40px 28px;background:var(--surface);border-top:1.5px solid var(--border)}
@@ -411,7 +429,7 @@ footer{background:var(--surface);border-top:1.5px solid var(--border);padding:36
 <!-- SOCIAL PROOF -->
 <div class="social-proof">
   <div class="social-proof-inner">
-    <div class="social-proof-label" style="font-size:13px">Real vets. Real results.</div>
+    <div class="social-proof-label" style="font-size:13px;font-family:var(--ff-display);margin-bottom:20px">Real vets. Real results.</div>
     <div class="social-proof-quotes">
       <div class="sp-quote">
         <div class="sp-quote-text">&ldquo;I had no idea I was leaving $800/month on the table. UNDERRATED found 3 conditions I never thought to claim.&rdquo;</div>
@@ -426,13 +444,17 @@ footer{background:var(--surface);border-top:1.5px solid var(--border);padding:36
         <div class="sp-quote-author">&mdash; Navy veteran, Gulf War era</div>
       </div>
     </div>
-    <div class="sp-orgs">
+    <div class="sp-orgs sp-orgs-desktop">
       <span class="sp-org"><span class="sp-org-icon">&#9733;</span> Trusted by veterans from</span>
       <span class="sp-org">DAV</span><span style="color:var(--ink-4)">&middot;</span>
       <span class="sp-org">VFW</span><span style="color:var(--ink-4)">&middot;</span>
       <span class="sp-org">American Legion</span><span style="color:var(--ink-4)">&middot;</span>
       <span class="sp-org">Team Rubicon</span><span style="color:var(--ink-4)">&middot;</span>
       <span class="sp-org">IAVA</span>
+    </div>
+    <div class="sp-orgs-mobile">
+      <div class="trust-label-m">Veterans from these communities trust UNDERRATED</div>
+      <div class="trust-names-m">DAV &middot; VFW &middot; AMERICAN LEGION &middot; TEAM RUBICON &middot; IAVA</div>
     </div>
   </div>
 </div>
@@ -454,7 +476,7 @@ footer{background:var(--surface);border-top:1.5px solid var(--border);padding:36
 <div class="validate">
   <div class="validate-super">The problem</div>
   <h2 class="validate-h">Most vets are <em>underrated.</em><br>Most don't know it.</h2>
-  <p class="validate-body">The VA system isn't built to help you find what you're owed.<br>It's built to process claims. <strong>There's a difference.</strong><br><span style="display:block;margin-top:8px">.... and it costs veterans billions every year.</span></p>
+  <p class="validate-body">The VA system isn't built to help you find what you're owed.<br>It's built to process claims. <strong>There's a difference.</strong><br><span style="display:block;margin-top:8px">And it costs veterans billions every year.</span></p>
   <div class="validate-cards">
     <div class="vc"><div class="vc-num">1 in 3</div><div class="vc-label">veterans with service-connected disabilities are rated lower than their conditions warrant</div></div>
     <div class="vc"><div class="vc-num">$4,000+</div><div class="vc-label">average annual difference between a 70% and 80% rating in monthly compensation</div></div>
@@ -468,7 +490,7 @@ footer{background:var(--surface);border-top:1.5px solid var(--border);padding:36
     <div class="section-header">
       <div class="section-eyebrow"><span class="tag">How it works</span></div>
       <div class="section-title">The VA's math is designed<br>to confuse you.</div>
-      <p class="section-sub">UNDERRATED makes it readable. Here's how to go from<br><em>"I think I'm underrated"</em> to <em>"I just filed."</em></p>
+      <p class="section-sub">UNDERRATED makes it readable.<br class="mobile-br"> Here's how to go from<br class="mobile-br"> <em style="font-size:15px">"I think I'm underrated"</em> to <em style="font-size:15px">"I just filed."</em></p>
     </div>
     <div class="steps">
       <div class="step">
