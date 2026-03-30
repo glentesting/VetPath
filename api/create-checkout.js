@@ -39,8 +39,8 @@ export default async function handler(req) {
         price: process.env.STRIPE_PRICE_ID,
         quantity: 1
       }],
-      success_url: 'https://underratedvets.com/dashboard.html?upgraded=true',
-      cancel_url: 'https://underratedvets.com/upgrade.html',
+      success_url: 'https://www.underratedvets.com/dashboard.html?upgraded=true',
+      cancel_url: 'https://www.underratedvets.com/upgrade.html',
       metadata: {
         supabase_user_id: userId
       },

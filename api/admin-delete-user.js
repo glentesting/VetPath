@@ -11,7 +11,7 @@
 //   ADMIN_SECRET — any random string you set in Vercel env vars to protect this endpoint
 //
 // Usage (browser console or curl):
-//   POST https://underratedvets.com/api/admin-delete-user
+//   POST https://www.underratedvets.com/api/admin-delete-user
 //   Body: { "email": "stuck-user@example.com", "adminSecret": "your-secret-here" }
 //
 // After use, consider rotating ADMIN_SECRET in Vercel env vars.

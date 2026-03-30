@@ -5,7 +5,7 @@
 //
 // STRIPE WEBHOOK SETUP REQUIRED:
 // Dashboard → Developers → Webhooks → Add endpoint
-// URL: https://underratedvets.com/api/stripe-webhook
+// URL: https://www.underratedvets.com/api/stripe-webhook
 // Events to listen for:
 //   - checkout.session.completed
 //   - customer.subscription.deleted

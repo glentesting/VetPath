@@ -314,7 +314,7 @@ async function handleUpload(){
     stat.textContent='Extracting conditions...';
     var pubUrl=SUPABASE_URL+'/storage/v1/object/public/rating-decisions/'+encodeURIComponent(fileName);
     var token=(await sb.auth.getSession()).data.session.access_token;
-    var res=await fetch('https://underratedvets.com/api/extract-pdf',{
+    var res=await fetch('https://www.underratedvets.com/api/extract-pdf',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({file_url:pubUrl,user_id:currentUser.id})

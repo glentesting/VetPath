@@ -817,7 +817,7 @@ async function handlePDFImport(e){
     var fileUrl=SUPABASE_URL+'/storage/v1/object/public/rating-decisions/'+encodeURIComponent(fileName);
     // Extract
     var token=currentUser?(await sb.auth.getSession()).data.session.access_token:'';
-    var res=await fetch('https://underratedvets.com/api/extract-pdf',{
+    var res=await fetch('https://www.underratedvets.com/api/extract-pdf',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({file_url:fileUrl,user_id:currentUser?currentUser.id:'temp'})
