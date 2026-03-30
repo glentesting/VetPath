@@ -542,19 +542,22 @@ function handleFile(file){
   document.getElementById('upload-progress').style.display='block';
   var dz=document.getElementById('drop-zone');if(dz){dz.style.pointerEvents='none';dz.style.opacity='0.5';}
   var fname=currentUser.id+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
+  console.log('[vault] Step 1: uploading to storage as',fname,'size:',file.size);
   setStep('step-upload','active');
   sb.storage.from('rating-decisions').upload(fname,file,{upsert:true})
     .then(function(r){
-      if(r.error)throw new Error('Upload failed: '+r.error.message);
+      if(r.error){console.error('[vault] Storage upload error:',r.error);throw new Error('Upload failed: '+r.error.message);}
+      console.log('[vault] Step 2: storage upload done');
       setStep('step-upload','done');
       var fileUrl=sb.storage.from('rating-decisions').getPublicUrl(fname).data.publicUrl;
+      console.log('[vault] Step 3: public URL:',fileUrl);
       setStep('step-extract','active');
-      // Get current session token to authenticate the API call
       return sb.auth.getSession().then(function(sr) {
         var token = sr.data && sr.data.session ? sr.data.session.access_token : '';
+        console.log('[vault] Step 4: calling extract-pdf at',VURL,'with token:',token?'yes':'NO TOKEN');
         var ac=new AbortController();
         var to=setTimeout(function(){ac.abort();},58000);
-        return fetch(VURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({file_url:fileUrl,user_id:currentUser.id}),signal:ac.signal}).then(function(r){clearTimeout(to);return r;});
+        return fetch(VURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({file_url:fileUrl,user_id:currentUser.id}),signal:ac.signal}).then(function(r){clearTimeout(to);console.log('[vault] Step 5: extract-pdf response status:',r.status);return r;});
       });
     })
     .then(function(res){
