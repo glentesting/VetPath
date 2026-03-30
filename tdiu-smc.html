@@ -178,6 +178,7 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+var _conditionsDeadline=setTimeout(function(){var el=document.getElementById('results');if(el&&el.querySelector('.loading')){el.innerHTML='<div style="text-align:center;padding:40px 20px"><div style="font-size:32px;margin-bottom:12px">&#128203;</div><div style="font-size:16px;font-weight:500;color:#18191A;margin-bottom:8px">No conditions found</div><div style="font-size:14px;color:#8A8780;margin-bottom:20px;line-height:1.6">Upload your VA rating decision in the Vault first. Your conditions will load here automatically.</div><a href="vault.html" style="display:inline-block;padding:12px 24px;background:#0E8A63;color:#fff;border-radius:10px;text-decoration:none;font-size:14px;font-weight:500">Go to Vault \u2192</a></div>';}},6000);
 var SUPABASE_URL='https://bglhfmwjfnmybcrjlscm.supabase.co';
 var SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnbGhmbXdqZm5teWJjcmpsc2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzk2MjYsImV4cCI6MjA4OTg1NTYyNn0.Pd1mHpNdHWAh4OKsPBXpCs86OXNOYMPxxhGVwBuEqqI';
 var sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
@@ -343,7 +344,7 @@ function renderResults(conditions){
     if(plan!=='pro'&&plan!=='earned'){document.body.classList.add('paywalled');addNavLocks();document.getElementById('paywall-cta').href='upgrade.html';document.getElementById('paywall-cta').textContent='Unlock EARNED \u2014 $39/mo';document.getElementById('paywall-alt').innerHTML='Already EARNED? <a href="login.html">Log in</a>';}
   }).catch(function(){document.body.classList.add('paywalled');addNavLocks();});
   var conditionsLoaded=false;
-  function handleConditions(data){if(conditionsLoaded)return;conditionsLoaded=true;renderResults(data||[]);}
+  function handleConditions(data){if(conditionsLoaded)return;conditionsLoaded=true;clearTimeout(_conditionsDeadline);renderResults(data||[]);}
   sb.from('conditions').select('name,rating,decision').eq('user_id',currentUser.id)
     .then(function(qr){handleConditions(qr.data);})
     .catch(function(){handleConditions([]);});
