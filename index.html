@@ -47,6 +47,10 @@ nav{position:sticky;top:0;z-index:100;background:rgba(245,242,236,0.93);backdrop
 .nav-dropdown-menu a{display:flex;align-items:center;padding:7px 16px;font-size:13px;color:var(--ink-2)!important;transition:background .12s,color .12s;border-radius:0;margin:0;line-height:1.3}
 .nav-dropdown-menu a:hover{background:var(--green-bg);color:var(--ink)!important}
 .nav-lock{width:9px;height:11px;opacity:.4;flex-shrink:0;margin-right:5px;vertical-align:middle;position:relative;top:-1px}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--green);color:#fff;font-family:var(--ff-display);font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:pointer;text-decoration:none;flex-shrink:0;transition:opacity .15s}
+.nav-avatar:hover{opacity:.85}
+.nav-signout{font-size:13px;color:var(--ink-3);background:none;border:none;padding:0;cursor:pointer;transition:color .15s;font-family:var(--ff-body)}
+.nav-signout:hover{color:var(--ink)}
 .nav-cta-static{display:flex;align-items:center;gap:10px}
 .nav-hamburger{display:none;background:none;border:1.5px solid var(--border-2);border-radius:8px;padding:6px 11px;cursor:pointer;color:var(--ink-2);font-family:var(--ff-mono);font-size:14px;line-height:1;align-items:center;gap:5px;transition:all .15s}
 .nav-hamburger:hover{border-color:var(--ink-3);color:var(--ink)}
@@ -308,6 +312,9 @@ footer{background:var(--surface);border-top:1.5px solid var(--border);padding:36
       </div>
     </div>
     <div class="nav-cta-static">
+      <a href="dashboard.html" id="nav-dashboard-link" style="display:none;font-size:13px;color:var(--ink-3);transition:color .15s">Dashboard</a>
+      <a href="profile.html" class="nav-avatar" id="nav-avatar" style="display:none">?</a>
+      <button class="nav-signout" id="nav-signout" style="display:none" onclick="handleSignout()">Sign out</button>
       <a href="login.html" style="font-size:13px;color:var(--ink-3);transition:color .15s" id="nav-login">Log in</a>
       <a href="signup.html" class="btn-primary" id="nav-signup" style="font-size:14px;padding:10px 22px">Get started free</a>
     </div>
@@ -633,20 +640,32 @@ var sb = window.supabase.createClient(
   'https://bglhfmwjfnmybcrjlscm.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJnbGhmbXdqZm5teWJjcmpsc2NtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzk2MjYsImV4cCI6MjA4OTg1NTYyNn0.Pd1mHpNdHWAh4OKsPBXpCs86OXNOYMPxxhGVwBuEqqI');
 
-// Check auth - if logged in, swap CTAs and show sign out instead of log in/sign up
+// Check auth - if logged in, show avatar + sign out, hide login/signup
 sb.auth.getSession().then(function(res) {
   var session = res && res.data && res.data.session ? res.data.session : null;
   if (session) {
-    // Logged in - update CTAs
+    // Update hero CTAs
     var heroCta = document.getElementById('hero-cta');
     if (heroCta) { heroCta.textContent = 'Check my rating'; heroCta.href = 'dashboard.html'; }
     var finalCta = document.getElementById('final-cta');
     if (finalCta) { finalCta.textContent = 'Check my rating for free'; finalCta.href = 'dashboard.html'; }
-    // Hide log in / sign up, show sign out
-    var login = document.getElementById('nav-login');
-    var signup = document.getElementById('nav-signup');
-    if (login) login.style.display = 'none';
-    if (signup) { signup.textContent = 'Sign out'; signup.href = '#'; signup.onclick = function(e) { e.preventDefault(); handleSignout(); }; }
+    // Show avatar + dashboard + sign out, hide login/signup
+    document.getElementById('nav-login').style.display = 'none';
+    document.getElementById('nav-signup').style.display = 'none';
+    document.getElementById('nav-avatar').style.display = 'flex';
+    document.getElementById('nav-avatar').textContent = session.user.email[0].toUpperCase();
+    document.getElementById('nav-signout').style.display = '';
+    document.getElementById('nav-dashboard-link').style.display = '';
+    // Check plan — remove locks for paid users
+    sb.from('profiles').select('plan,first_name').eq('user_id', session.user.id).single().then(function(pr) {
+      var plan = (pr.data && pr.data.plan) || 'free';
+      var fn = pr.data && pr.data.first_name ? pr.data.first_name : '';
+      if (fn) document.getElementById('nav-avatar').textContent = fn[0].toUpperCase();
+      if (plan === 'pro' || plan === 'earned') {
+        // Remove all lock SVGs from dropdown
+        document.querySelectorAll('.nav-dropdown-menu .nav-lock').forEach(function(el) { el.remove(); });
+      }
+    }).catch(function() {});
   }
 }).catch(function() {});
 
