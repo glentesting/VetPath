@@ -586,7 +586,7 @@ async function handleFile(file){
       if(!res.ok)return res.json().then(function(e){throw new Error(e.error||'We could not read this PDF \u2014 make sure it\u2019s a VA rating decision letter, not a scanned image.');});
       return res.json();
     })
-    .then(function(extracted){
+    .then(async function(extracted){
       if(!extracted.success||!extracted.conditions||!extracted.conditions.length)throw new Error('No conditions found. Make sure this is a VA rating decision letter.');
       // Store rich extraction data
       if(extracted.combined_rating!=null)localStorage.setItem('ur_combined_rating_'+currentUser.id,extracted.combined_rating);
@@ -600,6 +600,7 @@ async function handleFile(file){
       // REQUIRED: run in Supabase SQL Editor first:
       //   ALTER TABLE conditions ADD CONSTRAINT conditions_user_name_unique UNIQUE (user_id, name);
       var rows=extracted.conditions.map(function(c,i){return{user_id:currentUser.id,name:c.condition_name||c.name||'Unknown',rating:c.rating!=null?String(c.rating):null,diagnostic_code:c.diagnostic_code||null,decision:c.decision||null,effective_date:c.effective_date||null,sort_order:i};});
+      console.log('[vault] Saving',rows.length,'conditions...');
       var upsertRes=await sb.from('conditions').upsert(rows,{onConflict:'user_id,name',ignoreDuplicates:false});
       if(upsertRes.error){
         console.error('[vault] Upsert error:',upsertRes.error.message,'— falling back to plain insert');
