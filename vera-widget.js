@@ -69,6 +69,100 @@ fab.innerHTML='<span class="vera-icon">\u2726</span><span class="vera-text">ASK 
 fab.onclick=function(){openVera();};
 document.body.appendChild(fab);
 
+// ── FEEDBACK BUTTON + MODAL ──
+// Requires feedback table in Supabase:
+// CREATE TABLE IF NOT EXISTS feedback (
+//   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+//   user_id uuid,
+//   email text,
+//   type text,
+//   message text,
+//   created_at timestamptz DEFAULT now()
+// );
+var fbStyle=document.createElement('style');
+fbStyle.textContent=`
+#fb-btn{position:fixed;right:20px;bottom:84px;z-index:999;width:36px;height:36px;border-radius:50%;background:#4A4845;color:#fff;border:none;cursor:pointer;font-size:16px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.15);transition:opacity .15s}
+#fb-btn:hover{opacity:.85}
+#fb-overlay{display:none;position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,0.4);align-items:center;justify-content:center;padding:20px}
+#fb-overlay.open{display:flex}
+#fb-card{background:#fff;border-radius:16px;padding:28px;max-width:380px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,0.15)}
+.fb-title{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:#18191A;margin-bottom:4px}
+.fb-sub{font-size:13px;color:#8A8780;margin-bottom:16px}
+.fb-opts{display:flex;gap:8px;margin-bottom:16px}
+.fb-opt{flex:1;padding:10px;border:1.5px solid rgba(0,0,0,0.16);border-radius:10px;background:#F5F2EC;cursor:pointer;text-align:center;font-size:13px;font-weight:500;color:#4A4845;transition:all .15s}
+.fb-opt:hover,.fb-opt.active{border-color:#0E8A63;background:rgba(14,138,99,0.09);color:#0E8A63}
+.fb-textarea{display:block;width:100%;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:14px;color:#18191A;background:#F5F2EC;border:1.5px solid rgba(0,0,0,0.16);border-radius:10px;outline:none;resize:vertical;min-height:80px;margin-bottom:10px}
+.fb-textarea:focus{border-color:#0E8A63}
+.fb-email{display:block;width:100%;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:#18191A;background:#F5F2EC;border:1.5px solid rgba(0,0,0,0.16);border-radius:10px;outline:none;margin-bottom:12px}
+.fb-submit{width:100%;padding:11px;background:#0E8A63;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif}
+.fb-submit:hover{background:#10A376}
+.fb-submit:disabled{opacity:.5;cursor:not-allowed}
+.fb-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;color:#8A8780;cursor:pointer}
+.fb-success{text-align:center;padding:20px 0;font-size:15px;color:#0E8A63;font-weight:500}
+`;
+document.head.appendChild(fbStyle);
+
+var fbBtn=document.createElement('button');
+fbBtn.id='fb-btn';
+fbBtn.textContent='?';
+fbBtn.onclick=function(){document.getElementById('fb-overlay').classList.add('open');};
+document.body.appendChild(fbBtn);
+
+var fbOverlay=document.createElement('div');
+fbOverlay.id='fb-overlay';
+fbOverlay.innerHTML=`
+<div id="fb-card" style="position:relative">
+  <button class="fb-close" onclick="document.getElementById('fb-overlay').classList.remove('open')">&times;</button>
+  <div class="fb-title">Help & Feedback</div>
+  <div class="fb-sub">Found a bug or have a suggestion? Let us know.</div>
+  <div class="fb-opts">
+    <div class="fb-opt" id="fb-opt-bug" onclick="fbSetType('bug')">Report a bug</div>
+    <div class="fb-opt" id="fb-opt-feedback" onclick="fbSetType('feedback')">Share feedback</div>
+  </div>
+  <div id="fb-form" style="display:none">
+    <textarea class="fb-textarea" id="fb-msg" placeholder="What's on your mind?"></textarea>
+    <input class="fb-email" type="email" id="fb-email" placeholder="Email (optional)">
+    <button class="fb-submit" id="fb-submit" onclick="fbSubmit()">Send</button>
+  </div>
+</div>`;
+document.body.appendChild(fbOverlay);
+fbOverlay.addEventListener('click',function(e){if(e.target===fbOverlay)fbOverlay.classList.remove('open');});
+
+var fbType='feedback';
+window.fbSetType=function(t){
+  fbType=t;
+  document.getElementById('fb-opt-bug').classList.toggle('active',t==='bug');
+  document.getElementById('fb-opt-feedback').classList.toggle('active',t==='feedback');
+  document.getElementById('fb-msg').placeholder=t==='bug'?'What went wrong?':'What\'s on your mind?';
+  document.getElementById('fb-form').style.display='block';
+  // Pre-fill email if logged in
+  try{if(window.currentUser)document.getElementById('fb-email').value=window.currentUser.email;}catch(e){}
+};
+window.fbSubmit=async function(){
+  var msg=document.getElementById('fb-msg').value.trim();
+  if(!msg)return;
+  var btn=document.getElementById('fb-submit');
+  btn.disabled=true;btn.textContent='Sending...';
+  try{
+    var client=window.sb||null;
+    if(client){
+      await client.from('feedback').insert({
+        user_id:window.currentUser?window.currentUser.id:null,
+        email:document.getElementById('fb-email').value.trim()||null,
+        type:fbType,
+        message:msg
+      });
+    }
+  }catch(e){console.error('Feedback submit error:',e);}
+  document.getElementById('fb-card').innerHTML='<div class="fb-success">Thanks \u2014 we\'ll look into it.</div>';
+  setTimeout(function(){document.getElementById('fb-overlay').classList.remove('open');
+    // Reset form for next use
+    setTimeout(function(){
+      document.getElementById('fb-card').innerHTML='<button class="fb-close" onclick="document.getElementById(\'fb-overlay\').classList.remove(\'open\')">&times;</button><div class="fb-title">Help & Feedback</div><div class="fb-sub">Found a bug or have a suggestion? Let us know.</div><div class="fb-opts"><div class="fb-opt" id="fb-opt-bug" onclick="fbSetType(\'bug\')">Report a bug</div><div class="fb-opt" id="fb-opt-feedback" onclick="fbSetType(\'feedback\')">Share feedback</div></div><div id="fb-form" style="display:none"><textarea class="fb-textarea" id="fb-msg" placeholder="What\'s on your mind?"></textarea><input class="fb-email" type="email" id="fb-email" placeholder="Email (optional)"><button class="fb-submit" id="fb-submit" onclick="fbSubmit()">Send</button></div>';
+    },500);
+  },2000);
+};
+
 // Inject Panel
 var panel=document.createElement('div');
 panel.id='vera-panel';
