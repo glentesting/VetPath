@@ -336,6 +336,13 @@ async function saveProfile(){
     return;
   }
 
+  // Post-save verification — confirm data was actually written
+  var check=await sb.from('profiles').select('*').eq('user_id',currentUser.id).single();
+  console.log('Post-save verification:', check.data, check.error);
+  if(check.error){
+    console.error('Post-save read failed:', check.error.message);
+  }
+
   console.log('saveProfile success');
   status.textContent='Saved \u2713';
   status.className='save-status saved';
