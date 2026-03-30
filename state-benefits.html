@@ -24,6 +24,8 @@ body.paywalled .paywall-overlay{display:flex}
 .paywall-secondary{display:block;margin-top:14px;font-size:13px;color:var(--ink-3)}
 .paywall-secondary a{color:var(--green);font-weight:500}
 .paywall-secondary a:hover{text-decoration:underline}
+.paywall-hook{font-family:var(--ff-display);font-size:32px;font-weight:800;line-height:1;color:var(--ink)}
+.paywall-price-line{font-family:var(--ff-mono);font-size:11px;color:var(--ink-3);text-align:center;margin-top:8px}
 a{color:inherit;text-decoration:none}
 nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 28px}
 .nav-inner{max-width:1080px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;position:relative}
@@ -165,7 +167,7 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
     </div>
   </div>
 </nav>
-<div class="paywall-overlay"><div class="paywall-card"><svg class="paywall-lock-svg" viewBox="0 0 10 12" width="32" height="38" fill="none"><rect x="1.5" y="5" width="7" height="6" rx="1.2" stroke="currentColor" stroke-width="1.2"/><path d="M3 5V3.5a2 2 0 014 0V5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg><div class="paywall-title">EARNED ACCESS ONLY</div><p class="paywall-sub">See every state benefit your rating qualifies you for &mdash; all 50 states.</p><a href="signup.html" class="paywall-btn" id="paywall-cta">Unlock EARNED &mdash; $39/mo</a><div class="paywall-secondary" id="paywall-alt">Already have an account? <a href="login.html">Log in</a></div></div></div>
+<div class="paywall-overlay"><div class="paywall-card"><svg class="paywall-lock-svg" viewBox="0 0 10 12" width="32" height="38" fill="none"><rect x="1.5" y="5" width="7" height="6" rx="1.2" stroke="currentColor" stroke-width="1.2"/><path d="M3 5V3.5a2 2 0 014 0V5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg><div class="paywall-title paywall-hook">YOUR STATE OWES YOU TOO.</div><p class="paywall-sub">See every benefit your rating qualifies you for.</p><a href="signup.html" class="paywall-btn" id="paywall-cta">Unlock EARNED</a><div class="paywall-price-line">$39/mo &middot; Cancel anytime</div><div class="paywall-secondary" id="paywall-alt">Already have an account? <a href="login.html">Log in</a></div></div></div>
 
 <div class="page">
   <div class="page-eyebrow">Your benefits</div>
