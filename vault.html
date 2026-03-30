@@ -155,7 +155,10 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
 .card-title{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:4px}
 .card-sub{font-size:13px;color:var(--ink-3);line-height:1.6;margin-bottom:16px}
 .cond-list{display:flex;flex-direction:column;gap:8px}
-.cond-row{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px}
+.cond-row{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;position:relative}
+.cond-delete{opacity:0;font-size:12px;color:var(--ink-3);background:none;border:none;cursor:pointer;padding:2px 6px;transition:opacity .15s,color .15s;flex-shrink:0}
+.cond-delete:hover{color:var(--red)}
+.cond-row:hover .cond-delete{opacity:1}
 .cond-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .cond-dot.green{background:var(--green)}.cond-dot.amber{background:var(--amber)}.cond-dot.red{background:var(--red)}.cond-dot.gray{background:var(--ink-4)}
 .cond-name{flex:1;font-size:13px;color:var(--ink);font-weight:500;line-height:1.35}
@@ -514,6 +517,16 @@ function loadDocuments(){
 
 function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+async function deleteCondition(id,name){
+  if(!confirm('Remove '+name+'?'))return;
+  var res=await sb.from('conditions').delete().eq('id',id);
+  if(res.error){alert('Could not delete: '+res.error.message);return;}
+  // Reload all conditions and re-render
+  var qr=await sb.from('conditions').select('*').eq('user_id',currentUser.id);
+  var d=qr.data||[];d.sort(function(a,b){return(parseInt(b.rating)||0)-(parseInt(a.rating)||0);});
+  renderDashboard(d);
+}
+
 function toggleDocConditions(btn,date){
   var panel=btn.nextElementSibling;
   if(panel.classList.contains('open')){panel.classList.remove('open');btn.innerHTML='View conditions &#9662;';return;}
@@ -583,30 +596,13 @@ async function handleFile(file){
       if(extracted.favorable_findings&&extracted.favorable_findings.length)localStorage.setItem('ur_favorable_'+currentUser.id,JSON.stringify(extracted.favorable_findings));
       if(extracted.denial_reasons&&extracted.denial_reasons.length)localStorage.setItem('ur_denials_'+currentUser.id,JSON.stringify(extracted.denial_reasons));
       setStep('step-extract','done');setStep('step-save','active');
-      // Merge new conditions with existing — update matches, insert new, keep old
-      return sb.from('conditions').select('id,name').eq('user_id',currentUser.id).then(async function(existRes){
-        var existing=existRes.data||[];
-        var existingNames={};
-        existing.forEach(function(e){existingNames[e.name.toLowerCase()]={id:e.id,name:e.name};});
-        var toInsert=[];
-        for(var i=0;i<extracted.conditions.length;i++){
-          var c=extracted.conditions[i];
-          var cName=c.condition_name||c.name||'Unknown';
-          var row={user_id:currentUser.id,name:cName,rating:c.rating!=null?String(c.rating):null,diagnostic_code:c.diagnostic_code||null,decision:c.decision||null,effective_date:c.effective_date||null,sort_order:i};
-          var match=existingNames[cName.toLowerCase()];
-          if(match){
-            // Update existing condition
-            await sb.from('conditions').update({rating:row.rating,diagnostic_code:row.diagnostic_code,decision:row.decision,effective_date:row.effective_date}).eq('id',match.id);
-          }else{
-            toInsert.push(row);
-          }
-        }
-        if(toInsert.length){
-          var insRes=await sb.from('conditions').insert(toInsert);
-          if(insRes.error)throw new Error('Save failed: '+insRes.error.message);
-        }
-        console.log('[vault] Merged:',extracted.conditions.length-toInsert.length,'updated,',toInsert.length,'new,',existing.length,'kept from previous');
-      });
+      // Upsert conditions — updates existing by (user_id,name), inserts new
+      // REQUIRED: run in Supabase SQL Editor first:
+      //   ALTER TABLE conditions ADD CONSTRAINT conditions_user_name_unique UNIQUE (user_id, name);
+      var rows=extracted.conditions.map(function(c,i){return{user_id:currentUser.id,name:c.condition_name||c.name||'Unknown',rating:c.rating!=null?String(c.rating):null,diagnostic_code:c.diagnostic_code||null,decision:c.decision||null,effective_date:c.effective_date||null,sort_order:i};});
+      var upsertRes=await sb.from('conditions').upsert(rows,{onConflict:'user_id,name',ignoreDuplicates:false});
+      if(upsertRes.error)throw new Error('Save failed: '+upsertRes.error.message);
+      console.log('[vault] Upserted',rows.length,'conditions');
     })
     .then(function(){
       setStep('step-save','done');
@@ -690,7 +686,7 @@ function renderDashboard(data){
       if(cls==='den') noteHtml='<div class="cond-note den-note">&#9889; Denied: File a supplemental claim within 1 year with new evidence</div>';
       var decCls=cls==='sc'?'sc':cls==='den'?'nsc':'deferred';
       var dotClass = x.decision && x.decision.toLowerCase().indexOf('service connected')!==-1 && x.decision.toLowerCase().indexOf('not')===-1 ? 'green' : x.decision && x.decision.toLowerCase().indexOf('deferred')!==-1 ? 'amber' : x.decision && (x.decision.toLowerCase().indexOf('denied')!==-1 || x.decision.toLowerCase().indexOf('not service')!==-1) ? 'red' : 'gray';
-      return'<div class="cond-row '+(noteHtml?'has-note':'')+'"><div class="cond-dot '+dotClass+'"></div><div class="cond-name">'+(x.name||'Unknown')+'</div>'+(x.diagnostic_code?'<div class="cond-meta">DC '+x.diagnostic_code+'</div>':'')+'<span class="cond-decision '+decCls+'">'+dpLabel(x.decision)+'</span>'+ratingHtml+'</div>'+(noteHtml?'<div>'+noteHtml+'</div>':'');
+      return'<div class="cond-row '+(noteHtml?'has-note':'')+'"><div class="cond-dot '+dotClass+'"></div><div class="cond-name">'+(x.name||'Unknown')+'</div>'+(x.diagnostic_code?'<div class="cond-meta">DC '+x.diagnostic_code+'</div>':'')+'<span class="cond-decision '+decCls+'">'+dpLabel(x.decision)+'</span>'+ratingHtml+'<button class="cond-delete" onclick="deleteCondition(\''+x.id+'\',\''+escH(x.name).replace(/'/g,"\\'")+'\')">&#10005;</button></div>'+(noteHtml?'<div>'+noteHtml+'</div>':'');
     }).join('');
     document.getElementById('math-steps').innerHTML=steps.map(function(s){return'<div class="math-row"><span class="math-label">'+s.name+'</span><span class="math-formula">'+s.rb+'% x '+s.rating+'%</span><span class="math-value">−'+s.taken+'%</span></div>';}).join('')+'<div class="math-row total"><span class="math-label">Combined (exact)</span><span class="math-formula">→ rounds to '+official+'%</span><span class="math-value">'+exact.toFixed(1)+'%</span></div>';
     document.getElementById('tier-fill').style.width=Math.min(displayRating,100)+'%';
