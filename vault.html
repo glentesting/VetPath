@@ -553,7 +553,7 @@ async function handleFile(file){
       var signedRes=await sb.storage.from('rating-decisions').createSignedUrl(fname,300);
       if(signedRes.error){console.error('[vault] Signed URL error:',signedRes.error);throw new Error('Could not create signed URL');}
       var fileUrl=signedRes.data.signedUrl;
-      console.log('[vault] Step 3: signed URL ready');
+      console.log('[vault] Step 3: signedUrl:', fileUrl ? fileUrl.substring(0,120) : 'MISSING');
       setStep('step-extract','active');
       var sr=await sb.auth.getSession();
       var token=sr.data&&sr.data.session?sr.data.session.access_token:'';

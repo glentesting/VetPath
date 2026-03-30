@@ -71,8 +71,8 @@ export default async function handler(req) {
     console.log('PDF fetch:', pdfResponse.status, 'took:', Date.now() - fetchStart, 'ms');
 
     if (!pdfResponse.ok) {
-      console.error('PDF fetch failed:', pdfResponse.status);
-      return new Response(JSON.stringify({ error: 'Could not retrieve your PDF. Try uploading again.' }), {
+      console.error('PDF fetch failed:', pdfResponse.status, 'URL:', file_url.substring(0, 120));
+      return new Response(JSON.stringify({ error: 'Could not retrieve PDF: HTTP ' + pdfResponse.status }), {
         status: 500, headers: { 'Content-Type': 'application/json' }
       });
     }
