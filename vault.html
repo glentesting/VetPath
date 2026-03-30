@@ -247,9 +247,12 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
       </div>
     </div>
     <div class="nav-right">
+      <a href="profile.html" class="nav-avatar" id="nav-avatar">?</a>
       <span class="user-pill" id="user-email"></span>
+      <a href="login.html" id="nav-login-desktop" style="display:none;font-size:13px;color:var(--ink-3)">Log in</a>
+      <a href="signup.html" id="nav-signup-desktop" style="display:none;font-size:13px;color:#fff;background:var(--green);padding:7px 16px;border-radius:8px;font-weight:500;white-space:nowrap">Sign up</a>
       <button class="hamburger" onclick="toggleNav()">&#9776; Menu</button>
-      <button class="signout-btn" onclick="handleSignout()">Sign out</button>
+      <button class="signout-btn" id="nav-signout-desktop" onclick="handleSignout()">Sign out</button>
     </div>
   </div>
 </nav>

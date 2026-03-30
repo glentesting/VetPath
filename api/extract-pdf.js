@@ -1,4 +1,4 @@
-export const config = { runtime: 'nodejs', maxDuration: 60 };
+export const config = { runtime: 'nodejs' };
 
 // Simple rate limiting via in-memory store (resets on cold start, good enough for MVP)
 const requestLog = new Map();
@@ -29,6 +29,7 @@ function isValidSupabaseUrl(url) {
 }
 
 export default async function handler(req) {
+  console.log('extract-pdf handler called');
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 });
   }
