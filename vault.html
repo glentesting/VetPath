@@ -601,8 +601,14 @@ async function handleFile(file){
       //   ALTER TABLE conditions ADD CONSTRAINT conditions_user_name_unique UNIQUE (user_id, name);
       var rows=extracted.conditions.map(function(c,i){return{user_id:currentUser.id,name:c.condition_name||c.name||'Unknown',rating:c.rating!=null?String(c.rating):null,diagnostic_code:c.diagnostic_code||null,decision:c.decision||null,effective_date:c.effective_date||null,sort_order:i};});
       var upsertRes=await sb.from('conditions').upsert(rows,{onConflict:'user_id,name',ignoreDuplicates:false});
-      if(upsertRes.error)throw new Error('Save failed: '+upsertRes.error.message);
-      console.log('[vault] Upserted',rows.length,'conditions');
+      if(upsertRes.error){
+        console.error('[vault] Upsert error:',upsertRes.error.message,'— falling back to plain insert');
+        var insRes=await sb.from('conditions').insert(rows);
+        if(insRes.error)throw new Error('Save failed: '+insRes.error.message);
+        console.log('[vault] Fallback insert done:',rows.length,'conditions');
+      }else{
+        console.log('[vault] Upserted',rows.length,'conditions');
+      }
     })
     .then(function(){
       setStep('step-save','done');
