@@ -276,10 +276,23 @@ footer{background:var(--surface);border-top:1.5px solid var(--border);padding:36
   .social-proof-label{font-size:20px!important;border-left:3px solid var(--green);padding-left:12px;text-align:left!important}
 
   /* 8. MOST VETS section */
-  .validate-body{text-align:left!important;line-height:1.7!important;padding:0 4px}
+  .validate-body{text-align:left!important;line-height:1.75!important;padding:0 4px;font-size:16px}
 
   /* 9. Mobile line breaks */
   .mobile-br{display:block}
+
+  /* 10. Hide duplicate teaser section on mobile */
+  .teaser-section{display:none!important}
+
+  /* 11. Features subtitle overflow */
+  .section-sub{white-space:normal!important;overflow-wrap:break-word;padding:0 16px;font-size:14px}
+
+  /* 12. Pricing center alignment */
+  #pricing .section-header{text-align:center}
+  #pricing .section-sub{text-align:center}
+
+  /* 13. Final CTA hardcode */
+  .final-cta h2{font-size:clamp(24px,6vw,48px)!important;line-height:1.15;word-break:keep-all;overflow-wrap:break-word}
 }
 .mobile-carousel{display:none}
 .sp-orgs-mobile{display:none}
@@ -478,7 +491,7 @@ footer{background:var(--surface);border-top:1.5px solid var(--border);padding:36
 <div class="validate">
   <div class="validate-super">The problem</div>
   <h2 class="validate-h">Most vets are <em>underrated.</em><br>Most don't know it.</h2>
-  <p class="validate-body">The VA system isn't built to help you find what you're owed.<br>It's built to process claims. <strong>There's a difference.</strong><br><span style="display:block;margin-top:8px">And it costs veterans billions every year.</span></p>
+  <p class="validate-body">The VA system isn't built to help you find what you're owed. It's built to process claims. <strong>There's a difference.</strong> And it costs veterans billions every year.</p>
   <div class="validate-cards">
     <div class="vc"><div class="vc-num">1 in 3</div><div class="vc-label">veterans with service-connected disabilities are rated lower than their conditions warrant</div></div>
     <div class="vc"><div class="vc-num">$4,000+</div><div class="vc-label">average annual difference between a 70% and 80% rating in monthly compensation</div></div>
