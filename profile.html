@@ -324,7 +324,6 @@ async function saveProfile(){
   status.className='save-status saving';
 
   var data=getFormData();
-  data.updated_at=new Date().toISOString();
   console.log('saveProfile data:', data);
   var {error}=await sb.from('profiles').upsert(data,{onConflict:'user_id'});
 
