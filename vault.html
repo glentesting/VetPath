@@ -529,7 +529,7 @@ function toggleDocConditions(btn,date){
 }
 
 // UPLOAD
-function handleFile(file){
+async function handleFile(file){
   if(!currentUser){
     if(confirm('Create a free account to upload and save your rating decision. Sign up now?')){
       window.location.href='signup.html';
@@ -542,7 +542,12 @@ function handleFile(file){
   document.getElementById('upload-progress').style.display='block';
   var dz=document.getElementById('drop-zone');if(dz){dz.style.pointerEvents='none';dz.style.opacity='0.5';}
   var fname=currentUser.id+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'_');
-  console.log('[vault] Step 1: uploading to storage as',fname,'size:',file.size);
+
+  // Read file as base64 on frontend BEFORE upload
+  console.log('[vault] Step 0: reading file as base64, size:',file.size);
+  var base64Data=await new Promise(function(resolve,reject){var reader=new FileReader();reader.onload=function(e){resolve(e.target.result.split(',')[1]);};reader.onerror=reject;reader.readAsDataURL(file);});
+  console.log('[vault] Step 1: base64 ready, length:',base64Data.length,'uploading to storage as',fname);
+
   setStep('step-upload','active');
   sb.storage.from('rating-decisions').upload(fname,file,{upsert:true})
     .then(function(r){
@@ -554,10 +559,10 @@ function handleFile(file){
       setStep('step-extract','active');
       return sb.auth.getSession().then(function(sr) {
         var token = sr.data && sr.data.session ? sr.data.session.access_token : '';
-        console.log('[vault] Step 4: calling extract-pdf at',VURL,'with token:',token?'yes':'NO TOKEN');
+        console.log('[vault] Step 4: calling extract-pdf at',VURL,'with base64 (skipping server fetch)');
         var ac=new AbortController();
         var to=setTimeout(function(){ac.abort();},58000);
-        return fetch(VURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({file_url:fileUrl,user_id:currentUser.id}),signal:ac.signal}).then(function(r){clearTimeout(to);console.log('[vault] Step 5: extract-pdf response status:',r.status);return r;});
+        return fetch(VURL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},body:JSON.stringify({file_url:fileUrl,user_id:currentUser.id,pdf_base64:base64Data}),signal:ac.signal}).then(function(r){clearTimeout(to);console.log('[vault] Step 5: extract-pdf response status:',r.status);return r;});
       });
     })
     .then(function(res){

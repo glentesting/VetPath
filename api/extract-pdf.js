@@ -53,57 +53,54 @@ export default async function handler(req) {
   }
 
   try {
-    const { file_url, user_id } = await req.json();
+    const body = await req.json();
+    const { file_url, user_id, pdf_base64 } = body;
 
-    if (!file_url) {
-      return new Response(JSON.stringify({ error: 'file_url is required' }), {
+    if (!file_url && !pdf_base64) {
+      return new Response(JSON.stringify({ error: 'file_url or pdf_base64 is required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
-    // SSRF protection - only allow our own Supabase bucket
-    if (!isValidSupabaseUrl(file_url)) {
-      return new Response(JSON.stringify({ error: 'Invalid file URL' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
+    // Get PDF as base64 — prefer frontend-provided, fallback to fetch
+    let pdfBase64;
+    if (pdf_base64) {
+      pdfBase64 = pdf_base64;
+      console.log('Using base64 from frontend, length:', pdfBase64.length);
+    } else {
+      // Fallback: fetch from Supabase storage URL
+      if (!isValidSupabaseUrl(file_url)) {
+        return new Response(JSON.stringify({ error: 'Invalid file URL' }), {
+          status: 400, headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      console.log('Fetching PDF from:', file_url);
+      const fetchStart = Date.now();
+      const pdfResponse = await fetch(file_url);
+      console.log('PDF fetch status:', pdfResponse.status, 'took:', Date.now() - fetchStart, 'ms');
+      if (!pdfResponse.ok) {
+        return new Response(JSON.stringify({ error: 'Could not retrieve your PDF from storage.' }), {
+          status: 500, headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      const contentLength = pdfResponse.headers.get('content-length');
+      if (contentLength && parseInt(contentLength) > 20 * 1024 * 1024) {
+        return new Response(JSON.stringify({ error: 'File too large. Max 20MB.' }), {
+          status: 400, headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      const pdfBuffer = await pdfResponse.arrayBuffer();
+      const uint8Array = new Uint8Array(pdfBuffer);
+      let binary = '';
+      const chunkSize = 8192;
+      for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.subarray(i, i + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      pdfBase64 = btoa(binary);
+      console.log('PDF fetched and converted, length:', pdfBase64.length);
     }
-
-    // Fetch the PDF
-    console.log('Fetching PDF from:', file_url);
-    const fetchStart = Date.now();
-    const pdfResponse = await fetch(file_url);
-    console.log('PDF fetch status:', pdfResponse.status, 'took:', Date.now() - fetchStart, 'ms');
-    if (!pdfResponse.ok) {
-      console.error('PDF fetch failed:', pdfResponse.status, pdfResponse.statusText);
-      return new Response(JSON.stringify({ error: 'Could not retrieve your PDF from storage. The file may have been deleted or the link expired — try uploading again.' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // File size check - reject anything over 20MB
-    const contentLength = pdfResponse.headers.get('content-length');
-    console.log('PDF size:', contentLength ? Math.round(parseInt(contentLength)/1024) + 'KB' : 'unknown');
-    if (contentLength && parseInt(contentLength) > 20 * 1024 * 1024) {
-      return new Response(JSON.stringify({ error: 'File too large. Max 20MB.' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Convert to base64 in chunks to avoid call stack overflow
-    const pdfBuffer = await pdfResponse.arrayBuffer();
-    const uint8Array = new Uint8Array(pdfBuffer);
-    let binary = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.subarray(i, i + chunkSize);
-      binary += String.fromCharCode.apply(null, chunk);
-    }
-    const pdfBase64 = btoa(binary);
-    console.log('PDF converted to base64, length:', pdfBase64.length, 'chars');
 
     // Call Claude API with comprehensive VA document extraction prompt
     console.log('Calling Claude API...');
@@ -116,8 +113,8 @@ export default async function handler(req) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1500,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
         messages: [
           {
             role: 'user',
