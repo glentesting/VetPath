@@ -225,7 +225,6 @@
       </div>
       <div class="mobile-divider"></div>
       <div id="nav-auth-items">
-        <a href="profile.html">Profile</a>
         <a href="dashboard.html">Dashboard</a>
         <button class="mobile-signout" onclick="handleSignout()">Sign out</button>
       </div>
@@ -236,7 +235,7 @@
     </div>
     <div class="nav-right">
       <a href="profile.html" class="nav-avatar" id="nav-avatar">?</a>
-      <a href="profile.html" class="user-pill" id="user-email" style="text-decoration:none;color:inherit"></a>
+      <span class="user-pill" id="user-email"></span>
       <a href="login.html" id="nav-login-desktop" style="display:none;font-size:13px;color:var(--ink-3)">Log in</a>
       <a href="signup.html" id="nav-signup-desktop" style="display:none;font-size:13px;color:#fff;background:var(--green);padding:7px 16px;border-radius:8px;font-weight:500;white-space:nowrap">Sign up</a>
       <button class="signout-btn" id="nav-signout-desktop" onclick="handleSignout()">Sign out</button>
@@ -386,6 +385,7 @@ async function init() {
     if (session) {
       currentUser = session.user;
       document.getElementById("user-email").textContent = currentUser.email;
+      document.getElementById('nav-avatar').textContent=currentUser.email[0].toUpperCase();
       updateNavAuth(true);
       document.getElementById('import-bar').style.display='block';
       sb.from('profiles').select('plan,first_name').eq('user_id',currentUser.id).single().then(function(pr){

@@ -208,7 +208,6 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
       </div>
       <div class="mobile-divider"></div>
       <div id="nav-auth-items">
-        <a href="profile.html">Profile</a>
         <a href="dashboard.html">Dashboard</a>
         <button class="mobile-signout" onclick="handleSignout()">Sign out</button>
       </div>
@@ -219,7 +218,7 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
     </div>
     <div class="nav-right">
       <a href="profile.html" class="nav-avatar" id="nav-avatar">?</a>
-      <a href="profile.html" class="user-email" id="user-email" style="text-decoration:none;color:inherit"></a>
+      <span class="user-email" id="user-email"></span>
       <a href="login.html" id="nav-login-desktop" style="display:none;font-size:13px;color:var(--ink-3)">Log in</a>
       <a href="signup.html" id="nav-signup-desktop" style="display:none;font-size:13px;color:#fff;background:var(--green);padding:7px 16px;border-radius:8px;font-weight:500;white-space:nowrap">Sign up</a>
       <button class="hamburger" onclick="toggleNav()">&#9776; Menu</button>
@@ -563,6 +562,7 @@ function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').
   currentUser=session.user;
   sessionToken=session.access_token;
   document.getElementById('user-email').textContent=currentUser.email;
+  document.getElementById('nav-avatar').textContent=currentUser.email[0].toUpperCase();
   updateNavAuth(true);
 
   // Check plan

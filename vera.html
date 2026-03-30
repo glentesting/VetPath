@@ -147,7 +147,7 @@ nav{background:rgba(245,242,236,0.93);backdrop-filter:blur(12px);border-bottom:1
       <button class="mobile-signout" onclick="handleSignout()">Sign out</button>
     </div>
     <div class="nav-right">
-      <a href="profile.html" class="user-email" id="user-email"></a>
+      <span class="user-email" id="user-email"></span>
       <button class="hamburger" onclick="toggleNav()">&#9776; Menu</button>
       <button class="signout-btn" onclick="handleSignout()">Sign out</button>
     </div>
@@ -298,6 +298,7 @@ sb.auth.getSession().then(function(res){
   currentUser=session.user;
   sessionToken=session.access_token;
   document.getElementById('user-email').textContent=currentUser.email;
+  document.getElementById('nav-avatar').textContent=currentUser.email[0].toUpperCase();
   sb.from('profiles').select('plan,first_name').eq('user_id',currentUser.id).single().then(function(pr){
     var plan=(pr.data&&pr.data.plan)||'free';
     var fn=pr.data&&pr.data.first_name?pr.data.first_name:'';

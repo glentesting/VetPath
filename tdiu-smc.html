@@ -150,7 +150,6 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
       </div>
       <div class="mobile-divider"></div>
       <div id="nav-auth-items">
-        <a href="profile.html">Profile</a>
         <a href="dashboard.html">Dashboard</a>
         <button class="mobile-signout" onclick="handleSignout()">Sign out</button>
       </div>
@@ -160,7 +159,7 @@ nav{position:sticky;top:0;z-index:600;background:rgba(245,242,236,0.93);backdrop
       </div>
     </div>
     <div class="nav-right">
-      <a href="profile.html" class="user-pill" id="user-email"></a>
+      <span class="user-pill" id="user-email"></span>
       <button class="hamburger" onclick="toggleNav()">&#9776; Menu</button>
       <button class="signout-btn" onclick="handleSignout()">Sign out</button>
     </div>
@@ -334,6 +333,7 @@ function renderResults(conditions){
   if(!session){document.body.classList.add('paywalled');updateNavAuth(false);return;}
   currentUser=session.user;
   document.getElementById('user-email').textContent=currentUser.email;
+  document.getElementById('nav-avatar').textContent=currentUser.email[0].toUpperCase();
   updateNavAuth(true);
   sb.from('profiles').select('plan,first_name').eq('user_id',currentUser.id).single().then(function(pr){
     var plan=(pr.data&&pr.data.plan)||'free';
