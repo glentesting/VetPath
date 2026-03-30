@@ -294,14 +294,24 @@ function populateForm(row){
   });
 }
 
+// Load profile: query profiles table, populate form fields
+// Uses maybeSingle() — returns null if no profile row exists yet (new user)
 function loadProfile(){
   return sb.from('profiles').select('*').eq('user_id',currentUser.id).maybeSingle()
     .then(function(res){
+      console.log('loadProfile result:', res);
+      if(res.error){
+        console.error('loadProfile error:', res.error.message);
+        return;
+      }
       if(res.data) {
         populateForm(res.data);
         document.getElementById('save-status').textContent='Saved';
         document.getElementById('save-status').className='save-status saved';
       }
+    })
+    .catch(function(err){
+      console.error('loadProfile exception:', err);
     });
 }
 
@@ -314,9 +324,12 @@ async function saveProfile(){
   status.className='save-status saving';
 
   var data=getFormData();
+  data.updated_at=new Date().toISOString();
+  console.log('saveProfile data:', data);
   var {error}=await sb.from('profiles').upsert(data,{onConflict:'user_id'});
 
   if(error){
+    console.error('saveProfile error:', error.message, error.details, error.hint);
     status.textContent='Could not save \u2014 check your connection and try again';
     status.className='save-status';
     btn.disabled=false;
@@ -324,6 +337,7 @@ async function saveProfile(){
     return;
   }
 
+  console.log('saveProfile success');
   status.textContent='Saved \u2713';
   status.className='save-status saved';
   btn.disabled=false;
