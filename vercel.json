@@ -25,7 +25,7 @@
           "value": "getunderrated.vercel.app"
         }
       ],
-      "destination": "https://underratedvets.com/$1",
+      "destination": "https://www.underratedvets.com/$1",
       "permanent": true
     }
   ]

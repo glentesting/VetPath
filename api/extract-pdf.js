@@ -30,6 +30,9 @@ function isValidSupabaseUrl(url) {
 
 export default async function handler(req) {
   console.log('extract-pdf handler called');
+  const contentLength = req.headers.get('content-length');
+  console.log('Request content-length:', contentLength);
+
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 });
   }
@@ -52,8 +55,18 @@ export default async function handler(req) {
     });
   }
 
+  let body;
   try {
-    const body = await req.json();
+    body = await req.json();
+    console.log('Body parsed, has pdf_base64:', !!body.pdf_base64, 'length:', body.pdf_base64 ? body.pdf_base64.length : 0);
+  } catch (e) {
+    console.error('Body parse error:', e.message);
+    return new Response(JSON.stringify({ error: 'Request body parse failed: ' + e.message }), {
+      status: 400, headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  try {
     const { file_url, user_id, pdf_base64 } = body;
 
     if (!file_url && !pdf_base64) {
